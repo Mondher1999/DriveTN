@@ -1,0 +1,5 @@
+package com.drivetn.drivetn
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

@@ -1,0 +1,130 @@
+# .github/workflows/ios-build.yml
+#
+# Builds an UNSIGNED iOS .ipa for DriveTN on every push to main (and via manual
+# dispatch) using a GitHub-hosted macOS runner. The artifact is intended for
+# personal sideloading on iPhone via AltStore on Windows using a free Apple ID
+# (no paid Apple Developer account, no Mac required by the developer).
+#
+# AltStore re-signs the IPA locally with the user's Apple ID at install time,
+# so this workflow deliberately does NOT codesign anything. Free-Apple-ID
+# sideloads expire every 7 days and are limited to ~3 active apps; embedded
+# frameworks each consume one of the 10 provisioning-profile slots Apple
+# allows per free account, so we keep the build minimal (no Firebase/FCM).
+#
+# Output: DriveTN.ipa as a workflow artifact (retained 14 days). Download from
+# the run's "Artifacts" panel, then drop into AltStore on Windows.
+
+name: iOS Build (unsigned IPA for AltStore)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel any in-progress run on the same ref. macOS minutes bill 10x Linux,
+# so we never want two runs of the same branch racing.
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    env:
+      FLUTTER_VERSION: 3.41.1
+      IPA_NAME: DriveTN.ipa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock', '**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      # Podfile.lock won't exist on the very first run (no Podfile committed
+      # yet); hashFiles() returns an empty string in that case and the cache
+      # simply misses, which is fine. Subsequent runs will hit cleanly.
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Show toolchain versions
+        run: |
+          flutter --version
+          xcodebuild -version
+          pod --version
+          ruby --version
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # macos-latest (macOS 15) ships CocoaPods 1.16.2 as of 2026, which is
+      # compatible with Flutter 3.41.1 — no `gem install cocoapods` needed.
+      # `flutter build ios` will run `pod install` itself if Podfile is missing.
+      - name: Build iOS (release, no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          cd build/ios/iphoneos
+          if [ ! -d "Runner.app" ]; then
+            echo "::error::Runner.app not found in build/ios/iphoneos"
+            ls -la
+            exit 1
+          fi
+          mkdir -p Payload
+          mv Runner.app Payload/
+          # -qq quiet, -r recursive, -y store symlinks (important for .app bundles)
+          zip -qq -r -y "${IPA_NAME}" Payload
+          rm -rf Payload  # tidy so the artifact upload only grabs the .ipa
+
+      - name: Report IPA size and path
+        run: |
+          set -euo pipefail
+          IPA_PATH="build/ios/iphoneos/${IPA_NAME}"
+          echo "IPA path: ${IPA_PATH}"
+          ls -lh "${IPA_PATH}"
+          SIZE_BYTES=$(stat -f%z "${IPA_PATH}")
+          SIZE_MB=$(echo "scale=2; ${SIZE_BYTES} / 1048576" | bc)
+          echo "IPA size: ${SIZE_MB} MB (${SIZE_BYTES} bytes)"
+          {
+            echo "### DriveTN unsigned IPA"
+            echo ""
+            echo "- **File:** \`${IPA_NAME}\`"
+            echo "- **Size:** ${SIZE_MB} MB"
+            echo "- **Sideload via:** AltStore (Windows) with free Apple ID"
+            echo "- **Re-sign required every:** 7 days"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DriveTN-ios-unsigned
+          path: build/ios/iphoneos/${{ env.IPA_NAME }}
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0  # IPA is already a zip; recompressing is wasted CPU

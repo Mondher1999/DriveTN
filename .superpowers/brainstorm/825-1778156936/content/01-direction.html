@@ -1,0 +1,168 @@
+<h2>Choisis la direction visuelle qui te fait WOW</h2>
+<p class="subtitle">3 directions — chacune avec un aperçu splash + home en mini-mockup. Clique celle qui te parle le plus.</p>
+
+<style>
+  .moodboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px; }
+  .mood-card { border: 2px solid transparent; border-radius: 20px; overflow: hidden; cursor: pointer; transition: all .25s; background: #fff; }
+  .mood-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.12); }
+  .mood-card.selected { border-color: #2563EB; box-shadow: 0 20px 40px rgba(37,99,235,.25); }
+  .phones { display: flex; gap: 6px; padding: 18px; height: 280px; align-items: center; justify-content: center; }
+  .phone { width: 110px; height: 230px; border-radius: 20px; overflow: hidden; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+  .swatches { display: flex; padding: 0 18px 12px; gap: 6px; }
+  .swatch { width: 28px; height: 28px; border-radius: 999px; border: 1px solid rgba(0,0,0,.06); }
+  .meta { padding: 14px 18px 22px; }
+  .meta .name { font-size: 18px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
+  .meta .refs { font-size: 11px; opacity: .6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
+  .meta .mood { font-size: 13px; line-height: 1.5; opacity: .75; }
+  .meta .font-sample { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,.06); font-size: 12px; opacity: .7; }
+
+  /* — Direction A: Electric Premium — */
+  .a-splash { background: #0A0A0A; color: #fff; padding: 22px 14px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; font-family: ui-sans-serif, system-ui; }
+  .a-splash .small { font-size: 7px; letter-spacing: 1.5px; opacity: .5; }
+  .a-splash .big { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+  .a-splash .accent-line { height: 3px; width: 30px; background: #2563EB; border-radius: 999px; }
+  .a-home { background: #FAFAFA; padding: 20px 12px; height: 100%; display: flex; flex-direction: column; gap: 10px; font-family: ui-sans-serif; }
+  .a-home .title { font-size: 14px; font-weight: 800; color: #0A0A0A; letter-spacing: -0.4px; }
+  .a-home .pill { background: #fff; border: 1px solid #ECECEC; border-radius: 14px; padding: 10px; font-size: 8.5px; }
+  .a-home .pill .chip { display: inline-block; padding: 2px 7px; border-radius: 999px; background: #2563EB; color: #fff; font-weight: 700; font-size: 7.5px; }
+  .a-home .price { font-weight: 800; color: #0A0A0A; font-size: 15px; letter-spacing: -0.3px; }
+  .a-home .price small { font-weight: 500; font-size: 9px; color: #999; }
+
+  /* — Direction B: Sunset Tunisia — */
+  .b-splash { background: linear-gradient(135deg, #FF5E3A 0%, #FFB800 100%); color: #fff; padding: 22px 14px; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; font-family: ui-sans-serif; }
+  .b-splash .logo { font-size: 32px; font-weight: 900; letter-spacing: -1.5px; }
+  .b-splash .small { font-size: 8px; letter-spacing: 2px; opacity: .85; text-transform: uppercase; }
+  .b-home { background: #fff; padding: 20px 12px; height: 100%; display: flex; flex-direction: column; gap: 10px; font-family: ui-sans-serif; }
+  .b-home .greeting { font-size: 11px; color: #999; }
+  .b-home .title { font-size: 16px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
+  .b-home .card { background: #FFF6E5; border-radius: 18px; padding: 12px; }
+  .b-home .card .badge { display: inline-block; background: #FF5E3A; color: #fff; padding: 3px 8px; border-radius: 999px; font-size: 7.5px; font-weight: 700; margin-bottom: 6px; }
+  .b-home .card .price { font-weight: 800; font-size: 16px; color: #1a1a1a; }
+  .b-home .card .price small { font-weight: 500; font-size: 10px; color: #888; }
+
+  /* — Direction C: Aqua Tech — */
+  .c-splash { background: #fff; color: #0F172A; padding: 22px 14px; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; font-family: ui-sans-serif; position: relative; overflow: hidden; }
+  .c-splash::before { content:''; position: absolute; top: -40px; right: -40px; width: 140px; height: 140px; background: radial-gradient(circle, #06B6D4 0%, transparent 70%); opacity: .25; }
+  .c-splash::after { content:''; position: absolute; bottom: -40px; left: -40px; width: 140px; height: 140px; background: radial-gradient(circle, #7C3AED 0%, transparent 70%); opacity: .2; }
+  .c-splash .small { font-size: 8px; letter-spacing: 2px; opacity: .5; text-transform: uppercase; position: relative; z-index: 1; }
+  .c-splash .big { font-size: 28px; font-weight: 800; letter-spacing: -1.2px; position: relative; z-index: 1; }
+  .c-splash .big .grad { background: linear-gradient(90deg,#06B6D4,#7C3AED); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .c-home { background: linear-gradient(180deg, #fff 0%, #F0FDFC 100%); padding: 20px 12px; height: 100%; display: flex; flex-direction: column; gap: 10px; font-family: ui-sans-serif; }
+  .c-home .title { font-size: 15px; font-weight: 800; color: #0F172A; letter-spacing: -0.5px; }
+  .c-home .glass { background: rgba(255,255,255,.6); backdrop-filter: blur(10px); border: 1px solid rgba(6,182,212,.2); border-radius: 16px; padding: 11px; }
+  .c-home .glass .chip { display: inline-block; padding: 2px 7px; border-radius: 999px; background: linear-gradient(90deg,#06B6D4,#7C3AED); color: #fff; font-weight: 700; font-size: 7.5px; }
+  .c-home .price { font-weight: 800; color: #0F172A; font-size: 15px; letter-spacing: -0.3px; }
+  .c-home .price .grad { background: linear-gradient(90deg,#06B6D4,#7C3AED); -webkit-background-clip: text; background-clip: text; color: transparent; }
+</style>
+
+<div class="moodboard">
+
+  <!-- Direction A: Electric Premium -->
+  <div class="mood-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="phones">
+      <div class="phone"><div class="a-splash">
+        <div class="small">DRIVETN · 2026</div>
+        <div>
+          <div class="accent-line" style="margin-bottom:8px"></div>
+          <div class="big">Drive<br>better.</div>
+        </div>
+        <div class="small">→ TUNIS</div>
+      </div></div>
+      <div class="phone"><div class="a-home">
+        <div style="display:flex;justify-content:space-between"><span class="title">Bonjour, Mohamed</span><span style="font-size:14px">⌕</span></div>
+        <div class="title" style="font-size:11px;color:#888;font-weight:500">12 voitures à Tunis</div>
+        <div class="pill"><span class="chip">SUV</span> Hyundai Tucson<br><span class="price">220<small> DT/j</small></span></div>
+        <div class="pill"><span class="chip" style="background:#0A0A0A">Citadine</span> Renault Clio<br><span class="price">95<small> DT/j</small></span></div>
+      </div></div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0A0A0A"></div>
+      <div class="swatch" style="background:#2563EB"></div>
+      <div class="swatch" style="background:#FAFAFA;border:1px solid #ddd"></div>
+      <div class="swatch" style="background:#00D26A"></div>
+    </div>
+    <div class="meta">
+      <div class="name">A — Electric Premium</div>
+      <div class="refs">Revolut · Wise · Cash App</div>
+      <div class="mood">Blanc immaculé + noir profond + bleu électrique. Ultra net, fintech-grade, données qui claquent. Très "premium tech".</div>
+      <div class="font-sample"><b>Plus Jakarta Sans</b> — moderne, géométrique, très lisible</div>
+    </div>
+  </div>
+
+  <!-- Direction B: Sunset Tunisia -->
+  <div class="mood-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="phones">
+      <div class="phone"><div class="b-splash">
+        <div class="logo">DriveTN</div>
+        <div style="height:2px;width:40px;background:rgba(255,255,255,.6);border-radius:999px"></div>
+        <div class="small">Tunis · 2026</div>
+      </div></div>
+      <div class="phone"><div class="b-home">
+        <div class="greeting">Salut Mohamed 👋</div>
+        <div class="title">Roule comme tu veux.</div>
+        <div class="card">
+          <span class="badge">★ 4.9</span>
+          <div style="font-size:11px;font-weight:700;margin-top:4px">Hyundai Tucson</div>
+          <div style="font-size:8.5px;color:#888;margin:3px 0 6px">SUV · Auto · Diesel</div>
+          <div class="price">220<small> DT / jour</small></div>
+        </div>
+        <div class="card" style="background:#E5F7FF">
+          <span class="badge" style="background:#1A1A1A">Promo</span>
+          <div style="font-size:11px;font-weight:700;margin-top:4px">Renault Clio</div>
+          <div class="price" style="margin-top:3px">95<small> DT / jour</small></div>
+        </div>
+      </div></div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#FF5E3A"></div>
+      <div class="swatch" style="background:#FFB800"></div>
+      <div class="swatch" style="background:#1A1A1A"></div>
+      <div class="swatch" style="background:#FFF;border:1px solid #ddd"></div>
+    </div>
+    <div class="meta">
+      <div class="name">B — Sunset Tunisia</div>
+      <div class="refs">Bolt · Yango · Lyft</div>
+      <div class="mood">Gradient soleil tunisien (corail → ambre) + blanc clair + accents chaleureux. Énergique, sympathique, identité forte du Maghreb. Le plus "wow émotionnel".</div>
+      <div class="font-sample"><b>Manrope</b> — arrondi, chaleureux, super lisible</div>
+    </div>
+  </div>
+
+  <!-- Direction C: Aqua Tech -->
+  <div class="mood-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="phones">
+      <div class="phone"><div class="c-splash">
+        <div class="small">→ EST. 2026</div>
+        <div class="big"><span class="grad">DriveTN</span></div>
+        <div class="small">tunis  ·  marsa  ·  lac</div>
+      </div></div>
+      <div class="phone"><div class="c-home">
+        <div class="title">Près de toi</div>
+        <div style="font-size:9px;color:#666">12 véhicules disponibles</div>
+        <div class="glass">
+          <span class="chip">PREMIUM</span>
+          <div style="font-size:11px;font-weight:700;margin-top:4px;color:#0F172A">Hyundai Tucson</div>
+          <div style="font-size:8.5px;color:#666;margin:3px 0 6px">SUV · 5 places</div>
+          <div class="price"><span class="grad">220</span><small style="color:#999"> DT/j</small></div>
+        </div>
+        <div class="glass">
+          <span class="chip">★ 4.7</span>
+          <div style="font-size:11px;font-weight:700;margin-top:4px;color:#0F172A">Renault Clio</div>
+          <div class="price" style="margin-top:3px"><span class="grad">95</span><small style="color:#999"> DT/j</small></div>
+        </div>
+      </div></div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#06B6D4"></div>
+      <div class="swatch" style="background:#7C3AED"></div>
+      <div class="swatch" style="background:#0F172A"></div>
+      <div class="swatch" style="background:#FFF;border:1px solid #ddd"></div>
+    </div>
+    <div class="meta">
+      <div class="name">C — Aqua Tech</div>
+      <div class="refs">Linear · Arc · Apple Maps</div>
+      <div class="mood">Blanc + auras pastel turquoise/violet + verre dépoli (glassmorphism). Très "2026", techy, premium. Moderne mais un peu plus risqué (peut paraître "crypto-app").</div>
+      <div class="font-sample"><b>Geist</b> — précis, type-foundry quality, monospace details</div>
+    </div>
+  </div>
+
+</div>

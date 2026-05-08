@@ -1,0 +1,233 @@
+<h2>Wizard de matching — 3 directions</h2>
+<p class="subtitle">Quel format te parle pour comprendre les besoins de l'utilisateur avant la map ?</p>
+
+<style>
+  .wizard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 24px; }
+  .wiz-card { border: 2px solid transparent; border-radius: 22px; overflow: hidden; cursor: pointer; transition: all .25s; background: #fff; }
+  .wiz-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(255,94,58,.18); }
+  .wiz-card.selected { border-color: #FF5E3A; box-shadow: 0 18px 40px rgba(255,94,58,.32); }
+  .phones { display: flex; gap: 6px; padding: 18px; height: 320px; align-items: center; justify-content: center; }
+  .phone { width: 86px; height: 270px; border-radius: 18px; overflow: hidden; box-shadow: 0 8px 18px rgba(0,0,0,.12); }
+  .meta { padding: 14px 18px 22px; }
+  .meta .name { font-size: 17px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.4px; }
+  .meta .pitch { font-size: 12px; opacity: .65; line-height: 1.5; margin-bottom: 8px; }
+  .pros, .cons { font-size: 11px; line-height: 1.5; }
+  .pros { color: #10B981; }
+  .cons { color: #B23A2A; opacity: .8; }
+
+  /* base mock styles */
+  .scr { background: #FAFAFA; height: 100%; padding: 14px 10px; display: flex; flex-direction: column; gap: 6px; font-family: ui-sans-serif; }
+  .label { font-size: 6px; letter-spacing: 1.4px; opacity: .55; text-transform: uppercase; font-weight: 700; }
+  .h1 { font-size: 12px; font-weight: 900; letter-spacing: -.3px; line-height: 1; }
+  .h1 em { font-weight: 300; font-style: italic; }
+  .progress { height: 3px; background: #eee; border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
+  .progress > div { height: 100%; background: linear-gradient(90deg,#FF5E3A,#FFB800); border-radius: 999px; }
+  .chip { background: #fff; border: 1px solid #eee; border-radius: 999px; padding: 4px 6px; font-size: 7px; font-weight: 700; display: inline-block; }
+  .chip.active { background: linear-gradient(135deg,#FF5E3A,#FFB800); color: #fff; border: 0; }
+  .cta { background: #1A1A1A; color: #fff; border-radius: 999px; padding: 6px; font-size: 8px; font-weight: 800; text-align: center; }
+  .cta.grad { background: linear-gradient(135deg,#FF5E3A,#FFB800); }
+
+  /* Option A — 4 quick steps with big visuals */
+  .a-step { display: flex; flex-direction: column; gap: 6px; height: 100%; }
+  .a-step .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .a-step .tile { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 6px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 7px; font-weight: 700; }
+  .a-step .tile.sel { background: linear-gradient(135deg,#FF5E3A,#FFB800); color: #fff; border: 0; }
+  .a-step .tile .ico { font-size: 14px; }
+
+  /* Option B — Conversational chat */
+  .b-step { background: #fff; height: 100%; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .b-step .bubble { background: #F4F4F4; border-radius: 14px 14px 14px 4px; padding: 6px 8px; max-width: 80%; font-size: 7.5px; line-height: 1.4; align-self: flex-start; }
+  .b-step .me { background: linear-gradient(135deg,#FF5E3A,#FFB800); color: #fff; border-radius: 14px 14px 4px 14px; align-self: flex-end; }
+  .b-step .opts { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+  .b-step .opts .o { background: #fff; border: 1px solid #FF5E3A; color: #FF5E3A; padding: 3px 7px; border-radius: 999px; font-size: 7px; font-weight: 700; }
+
+  /* Option C — Single sheet stepper */
+  .c-step .form-row { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 6px 8px; }
+  .c-step .form-row.active { border-color: #FF5E3A; box-shadow: 0 4px 14px rgba(255,94,58,.2); }
+  .c-step .form-row .l { font-size: 6px; letter-spacing: 1px; opacity: .5; text-transform: uppercase; font-weight: 700; }
+  .c-step .form-row .v { font-size: 9px; font-weight: 800; margin-top: 2px; }
+  .c-step .form-row .v em { font-style: italic; font-weight: 400; opacity: .5; }
+</style>
+
+<div class="wizard-grid">
+
+  <!-- Option A: 4-step quick visual quiz -->
+  <div class="wiz-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="phones">
+      <div class="phone"><div class="scr">
+        <div class="label">— Étape 1/4</div>
+        <div class="progress"><div style="width:25%"></div></div>
+        <div class="h1">Pour quoi <em>faire ?</em></div>
+        <div class="a-step">
+          <div class="grid" style="margin-top:4px">
+            <div class="tile sel"><span class="ico">🏙️</span>Ville</div>
+            <div class="tile"><span class="ico">💼</span>Business</div>
+            <div class="tile"><span class="ico">🏖️</span>Weekend</div>
+            <div class="tile"><span class="ico">👨‍👩‍👧</span>Famille</div>
+          </div>
+        </div>
+        <div class="cta grad" style="margin-top:auto">Continuer →</div>
+      </div></div>
+      <div class="phone"><div class="scr">
+        <div class="label">— Étape 3/4</div>
+        <div class="progress"><div style="width:75%"></div></div>
+        <div class="h1">Quel <em>budget ?</em></div>
+        <div style="font-size:8px;text-align:center;margin-top:8px">
+          <div style="font-size:18px;font-weight:900;color:#FF5E3A">85<span style="font-size:10px;opacity:.5"> — 180 DT</span></div>
+        </div>
+        <div style="height:6px;background:#eee;border-radius:999px;margin:12px 0 8px;position:relative">
+          <div style="position:absolute;left:15%;right:35%;height:100%;background:linear-gradient(90deg,#FF5E3A,#FFB800);border-radius:999px"></div>
+          <div style="position:absolute;left:15%;top:-3px;width:12px;height:12px;background:#1A1A1A;border-radius:999px;border:2px solid #fff"></div>
+          <div style="position:absolute;right:35%;top:-3px;width:12px;height:12px;background:#1A1A1A;border-radius:999px;border:2px solid #fff"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7px;opacity:.5">Eco <span>Premium</span></div>
+        <div class="cta grad" style="margin-top:auto">Continuer →</div>
+      </div></div>
+      <div class="phone"><div class="scr" style="background:linear-gradient(180deg,#FFF6E5,#fff)">
+        <div class="label" style="color:#FF5E3A">— MATCH PARFAIT</div>
+        <div class="h1">Voici votre <em>top 3.</em></div>
+        <div style="background:#fff;border:1px solid #FF5E3A;border-radius:10px;padding:5px;margin-top:6px;display:flex;gap:6px;align-items:center">
+          <div style="width:24px;height:24px;background:linear-gradient(135deg,#FFE4D6,#FFF1B8);border-radius:6px"></div>
+          <div style="flex:1;font-size:7px"><b>Dacia Sandero</b><br><span style="color:#FF5E3A;font-weight:800">80 DT/j</span></div>
+          <div style="background:linear-gradient(135deg,#FF5E3A,#FFB800);width:14px;height:14px;border-radius:999px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:5px;margin-top:4px;display:flex;gap:6px;align-items:center">
+          <div style="width:24px;height:24px;background:linear-gradient(135deg,#FFE4D6,#FFF1B8);border-radius:6px"></div>
+          <div style="flex:1;font-size:7px"><b>Renault Clio</b><br><span style="color:#FF5E3A;font-weight:800">95 DT/j</span></div>
+        </div>
+        <div class="cta grad" style="margin-top:auto">Voir tout (12) →</div>
+      </div></div>
+    </div>
+    <div class="meta">
+      <div class="name">A — Quiz visuel 4 étapes</div>
+      <div class="pitch">Tiles tactiles pleins écrans (type Headspace / Calm onboarding). Très rapide, gros visuels, plein-pouce friendly. <b>15 secondes</b>.</div>
+      <div class="pros">+ Très visuel · zero friction · easy to skip</div>
+      <div class="cons">– Moins flexible si choix complexe</div>
+    </div>
+  </div>
+
+  <!-- Option B: Conversational chat -->
+  <div class="wiz-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="phones">
+      <div class="phone"><div class="b-step" style="background:#FAFAFA">
+        <div class="label" style="text-align:center">DRIVETN · ASSISTANT</div>
+        <div class="bubble">Salut ! 👋 Pour quoi <b>faire</b> ?</div>
+        <div class="opts">
+          <div class="o">🏙️ Ville</div>
+          <div class="o">💼 Business</div>
+          <div class="o">🏖️ Weekend</div>
+        </div>
+      </div></div>
+      <div class="phone"><div class="b-step" style="background:#FAFAFA">
+        <div class="bubble">Cool, ville. Pour combien de <b>jours</b> ?</div>
+        <div class="me" style="font-size:7.5px">3 jours</div>
+        <div class="bubble">Et votre <b>budget</b> max / jour ?</div>
+        <div class="opts">
+          <div class="o">< 100 DT</div>
+          <div class="o">100-200</div>
+          <div class="o">> 200</div>
+        </div>
+      </div></div>
+      <div class="phone"><div class="b-step" style="background:#FAFAFA">
+        <div class="me" style="font-size:7.5px">100 DT</div>
+        <div class="bubble">Dernière question : <b>boîte auto ou manuelle</b> ?</div>
+        <div class="opts">
+          <div class="o">🤖 Auto</div>
+          <div class="o">🔧 Manuelle</div>
+          <div class="o">🤷 Peu importe</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#FF5E3A,#FFB800);border-radius:14px;padding:6px;color:#fff;font-size:7px;font-weight:800;text-align:center;margin-top:auto">3 voitures pour vous →</div>
+      </div></div>
+    </div>
+    <div class="meta">
+      <div class="name">B — Chat conversationnel</div>
+      <div class="pitch">Assistant qui pose des questions en bulles, l'utilisateur répond par chips. Plus humain, comme parler à un agent. <b>30 secondes</b>.</div>
+      <div class="pros">+ Personnel · mémorable · feels AI-powered</div>
+      <div class="cons">– Plus long · risque "fatigue chat"</div>
+    </div>
+  </div>
+
+  <!-- Option C: Single sheet stepper -->
+  <div class="wiz-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="phones">
+      <div class="phone"><div class="scr">
+        <div class="label">— PERSONNALISER</div>
+        <div class="h1">Trouvons <em>la bonne.</em></div>
+        <div class="c-step" style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+          <div class="form-row active">
+            <div class="l">Type</div>
+            <div class="v">Ville · 4 places <em>← actif</em></div>
+          </div>
+          <div class="form-row">
+            <div class="l">Durée</div>
+            <div class="v">— Choisir</div>
+          </div>
+          <div class="form-row">
+            <div class="l">Budget</div>
+            <div class="v">— Choisir</div>
+          </div>
+          <div class="form-row">
+            <div class="l">Boîte</div>
+            <div class="v">— Choisir</div>
+          </div>
+        </div>
+        <div class="cta grad" style="margin-top:auto">Suivant →</div>
+      </div></div>
+      <div class="phone"><div class="scr">
+        <div class="label">— PERSONNALISER</div>
+        <div class="h1">Trouvons <em>la bonne.</em></div>
+        <div class="c-step" style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+          <div class="form-row" style="background:#FFF6E5;border-color:#FFE4D6">
+            <div class="l">✓ Type</div>
+            <div class="v" style="font-size:8px">Ville · 4 places</div>
+          </div>
+          <div class="form-row active">
+            <div class="l">Budget</div>
+            <div class="v">< 100 DT/jour <em>← actif</em></div>
+          </div>
+          <div class="form-row">
+            <div class="l">Boîte</div>
+            <div class="v">— Choisir</div>
+          </div>
+        </div>
+        <div class="cta grad" style="margin-top:auto">Suivant →</div>
+      </div></div>
+      <div class="phone"><div class="scr" style="background:linear-gradient(180deg,#FFF6E5,#fff)">
+        <div class="label" style="color:#FF5E3A">— RÉSULTATS</div>
+        <div class="h1">3 voitures <em>matchent.</em></div>
+        <div style="font-size:7px;color:#888;margin-top:2px">3 critères · trié par prix</div>
+        <div style="background:#fff;border:1px solid #FF5E3A;border-radius:10px;padding:5px;margin-top:6px;display:flex;gap:6px;align-items:center">
+          <div style="width:24px;height:24px;background:linear-gradient(135deg,#FFE4D6,#FFF1B8);border-radius:6px"></div>
+          <div style="flex:1;font-size:7px"><b>Dacia Sandero</b><br><span style="color:#FF5E3A;font-weight:800">80 DT/j</span></div>
+          <div style="background:linear-gradient(135deg,#FF5E3A,#FFB800);width:14px;height:14px;border-radius:999px"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:5px;margin-top:4px;display:flex;gap:6px;align-items:center">
+          <div style="width:24px;height:24px;background:linear-gradient(135deg,#FFE4D6,#FFF1B8);border-radius:6px"></div>
+          <div style="flex:1;font-size:7px"><b>Kia Picanto</b><br><span style="color:#FF5E3A;font-weight:800">85 DT/j</span></div>
+        </div>
+        <div class="cta grad" style="margin-top:auto">Voir sur la carte →</div>
+      </div></div>
+    </div>
+    <div class="meta">
+      <div class="name">C — Stepper sur même écran</div>
+      <div class="pitch">Tous les filtres visibles sur une carte unique, on remplit ligne par ligne, badge ✓ vert quand validé. Plus pro / SaaS. <b>20 secondes</b>.</div>
+      <div class="pros">+ Vue d'ensemble · backable · résultats live</div>
+      <div class="cons">– Moins fun · plus "form"</div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px;padding:18px;background:#FFF6E5;border-radius:14px;border-left:4px solid #FF5E3A;font-size:13px;line-height:1.6">
+  <b>Mon conseil personnel :</b> <b>A — Quiz visuel 4 étapes</b>. C'est le format qui :
+  <ul style="margin-top:8px;line-height:1.7">
+    <li>Convertit le mieux (Calm, Duolingo, Headspace l'utilisent tous)</li>
+    <li>Fait sentir l'utilisateur "compris" sans effort</li>
+    <li>Reste sous les 15s — pas de friction avant la map</li>
+    <li>Skippable via "Voir tout" en haut → power-users vont direct à la map</li>
+    <li>Sauvegarde en CarsCubit → applique automatiquement les filtres une fois la map ouverte</li>
+  </ul>
+  Les 4 étapes proposées : <b>Type de voyage</b> · <b>Durée</b> · <b>Budget</b> · <b>Boîte</b> → résultats triés par match score.
+</div>
+
+<p style="font-size:13px;color:#666;margin-top:14px">Clique l'option qui te parle — ou dis-moi en texte si tu veux mixer (ex: A pour le visuel, B pour la "personnalité", etc).</p>
