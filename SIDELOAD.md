@@ -1,137 +1,140 @@
-# DriveTN — Guide de Sideload iOS
+# DriveTN — Guide de Sideload iOS (Sideloadly, depuis la Tunisie)
 
-Guide pour installer une build de DriveTN sur ton iPhone depuis Windows, sans Mac et sans compte Apple Developer payant. On utilise GitHub Actions pour builder un IPA non signé, puis AltStore pour le signer avec ton Apple ID gratuit et l'installer sur l'iPhone.
+Guide pour installer une build de DriveTN sur ton iPhone depuis Windows, sans Mac et sans compte Apple Developer payant. On utilise GitHub Actions pour builder un IPA non signé, puis **Sideloadly** pour le signer avec ton Apple ID gratuit et l'installer sur l'iPhone.
+
+> Pourquoi Sideloadly et pas AltStore ? AltServer (côté Windows d'AltStore) demande iCloud pour Windows qui est instable/restrictif en Tunisie. Sideloadly est un seul `.exe`, pas d'iCloud requis, fonctionne partout dans le monde.
 
 ---
 
 ## 1. Pré-requis
 
-Avant de commencer, assure-toi d'avoir:
-
 - **Windows 10 ou 11** (64-bit)
 - **iPhone sous iOS 17 ou 18**
-- **Câble USB Lightning ou USB-C** (Lightning fiable, pas un câble de charge no-name)
-- **Apple ID** (compte gratuit, pas besoin du Developer Program à 99 $/an)
-- **iTunes installé depuis le site Apple** (PAS la version Microsoft Store — AltServer ne la détecte pas correctement). Télécharge l'installeur `.exe` sur apple.com/itunes
-- **iCloud pour Windows** installé (requis par AltServer pour la communication avec l'iPhone)
+- **Câble USB Lightning ou USB-C** fiable
+- **Apple ID** (compte gratuit, pas de Developer Program nécessaire)
+- **iTunes installé depuis apple.com/itunes** (PAS la version Microsoft Store — ses pilotes USB ne sont pas reconnus par Sideloadly)
 - **Compte GitHub** avec accès au repo `github.com/Mondher1999/DriveTN`
-- Workflow `.github/workflows/ios-build.yml` déjà présent dans le repo
 
-> Note: l'iPhone et le PC doivent être sur le **même réseau Wi-Fi** pour le refresh automatique tous les 7 jours.
+> Pas besoin d'iCloud pour Windows. Pas besoin d'AltServer.
 
 ---
 
-## 2. Installation initiale d'AltStore (à faire une seule fois)
+## 2. Installation de Sideloadly (à faire une seule fois)
 
-### 2.1. Télécharger AltServer
+### 2.1. Télécharger Sideloadly
 
-- Va sur [altstore.io](https://altstore.io)
-- Télécharge **AltServer pour Windows**
-- Décompresse le ZIP
+- Va sur **[sideloadly.io](https://sideloadly.io)**
+- Télécharge **Sideloadly pour Windows** (`Sideloadly.exe` ou `.msi`)
+- Lance l'installeur
 
-### 2.2. Installer AltServer sur Windows
+### 2.2. Installer iTunes (si pas déjà fait)
 
-- Lance `Setup.exe`
-- Accepte l'installation des dépendances si proposé
-- AltServer démarre dans la **system tray** (icône en bas à droite, près de l'horloge — clique sur la flèche `^` si elle est cachée)
+- Télécharge iTunes depuis **apple.com/itunes** (version classique, pas Microsoft Store)
+- Installe-le et lance-le une fois pour qu'il enregistre les pilotes USB de l'iPhone
 
 ### 2.3. Connecter l'iPhone
 
 - Branche l'iPhone au PC en USB
 - Sur l'iPhone, tape **"Faire confiance à cet ordinateur"** quand la popup apparaît, puis entre le code PIN
-- Ouvre iTunes une fois pour vérifier qu'il détecte l'iPhone (sinon AltServer ne le verra pas non plus)
-- Dans iTunes: sélectionne l'iPhone → **Résumé** → coche **"Synchroniser avec cet iPhone en Wi-Fi"** → Appliquer
+- Ouvre iTunes une fois pour vérifier qu'il détecte bien l'iPhone (sinon Sideloadly ne le verra pas non plus)
 
-### 2.4. Installer AltStore sur l'iPhone
+### 2.4. Préparer ton Apple ID pour le sideloading
 
-- Clic droit sur l'icône **AltServer** dans la system tray
-- **Install AltStore** → choisis ton iPhone dans la liste
-- Entre ton **Apple ID + mot de passe**
-  - Si tu as la 2FA activée, génère un mot de passe spécifique app sur [appleid.apple.com](https://appleid.apple.com) → Sécurité → Mots de passe pour les apps
-- Attends environ 1 minute. AltStore apparaît sur ton iPhone
+Si tu as la **2FA activée** (vérification en deux étapes — recommandée par Apple) :
+- Va sur **[appleid.apple.com](https://appleid.apple.com)** → connecte-toi
+- Section **Connexion et sécurité → Mots de passe pour les apps**
+- Génère un nouveau mot de passe (libellé : "Sideloadly DriveTN")
+- Copie-le quelque part — c'est ce mot de passe que tu utiliseras dans Sideloadly, **pas** ton mot de passe Apple ID normal
 
-### 2.5. Faire confiance au profil développeur
-
-- Sur l'iPhone: **Réglages → Général → VPN et gestion de l'appareil**
-- Tu vois ton Apple ID dans **"App de développeur"** → tape dessus → **Faire confiance**
-- Lance AltStore sur l'iPhone, vérifie qu'il s'ouvre sans erreur
+Si tu n'as pas la 2FA, ton mot de passe Apple ID classique fonctionne (mais active la 2FA, c'est plus sûr).
 
 ---
 
 ## 3. Workflow à chaque nouvelle build
 
-C'est le cycle que tu répètes pour chaque test.
+C'est le cycle que tu répètes pour chaque test (et tous les 7 jours pour re-signer l'app).
 
-### 3.1. Déclencher la build
+### 3.1. Déclencher la build sur GitHub
 
-Deux options:
-
+Deux options :
 - **Push** sur la branche `main`, OU
 - Va sur `github.com/Mondher1999/DriveTN/actions` → onglet **iOS Build (unsigned IPA for AltStore)** → bouton **Run workflow**
 
 ### 3.2. Attendre la fin de la build
 
 - Compte environ **8 à 12 minutes**
-- Quand le workflow passe au vert, ouvre le run
+- Quand le workflow passe au vert, ouvre la page du run
 
 ### 3.3. Récupérer l'IPA
 
 - En bas de la page du run, section **Artifacts** → télécharge `DriveTN-ios-unsigned`
 - Décompresse le ZIP → tu obtiens `DriveTN.ipa`
 
-### 3.4. Installer via AltStore
+### 3.4. Installer via Sideloadly
 
-- Sur Windows, AltServer doit tourner (system tray)
-- iPhone branché en USB, déverrouillé
-- Méthode recommandée: envoie le `DriveTN.ipa` sur l'iPhone via **iCloud Drive** (depuis Files Explorer Windows → iCloud Drive)
-- Sur l'iPhone, ouvre **Fichiers → iCloud Drive → DriveTN.ipa** → tape **Partager → AltStore**
-- AltStore signe avec ton Apple ID et installe sur l'iPhone (~30 s)
+1. iPhone branché en USB et déverrouillé
+2. Lance **Sideloadly** sur Windows
+3. **Drag-and-drop** `DriveTN.ipa` dans la fenêtre Sideloadly (zone "Drag & Drop IPA file here")
+4. Vérifie que **Apple ID** est rempli avec ton email Apple
+5. Vérifie que ton iPhone est sélectionné dans **Device** (s'il n'apparaît pas, débranche/rebranche le câble + assure-toi qu'iTunes le détecte)
+6. Clique **Start**
+7. Sideloadly demande ton **mot de passe Apple ID** (ou le mot de passe spécifique app si 2FA) — entre-le
+8. Sideloadly signe et installe l'IPA sur l'iPhone (~1-2 min, tu vois la progress bar)
+9. Quand c'est marqué **"DONE"**, l'app DriveTN apparaît sur l'écran d'accueil de l'iPhone
 
-### 3.5. Premier lancement
+### 3.5. Faire confiance au profil développeur (premier lancement uniquement)
 
-- L'icône DriveTN apparaît sur l'écran d'accueil
-- Premier tap → si "Untrusted Developer", retourne à l'étape **2.5** pour faire confiance au profil
+- Tape sur l'icône DriveTN sur l'iPhone → tu vois **"Untrusted Developer"**
+- Va dans **Réglages → Général → VPN et gestion de l'appareil**
+- Tu vois ton Apple ID sous **"App de développeur"** → tape dessus → **Faire confiance**
+- Relance DriveTN — ça marche
 
 ---
 
 ## 4. Limites du Apple ID gratuit
 
-À garder en tête:
+À garder en tête :
 
-- **Expiration 7 jours**: l'app cesse de se lancer après une semaine. Il faut la re-signer
-- **Maximum 3 apps sideloadées en même temps** par Apple ID (AltStore compte pour 1, donc en pratique tu as 2 slots libres)
+- **Expiration 7 jours** : l'app cesse de se lancer après une semaine. Pour la renouveler, tu refais l'étape 3.4 avec le même IPA (Sideloadly re-signe, l'app reste installée mais avec une nouvelle signature)
+- **Maximum 3 apps sideloadées en même temps** par Apple ID
 - **Pas de push notifications** (APNs)
 - **Pas d'iCloud** (CloudKit, iCloud Drive depuis l'app)
 - **Pas d'achats in-app**
-- **Bundle ID forcé** par Apple à un préfixe lié à ton Apple ID (AltStore gère ça automatiquement)
+- **Pas de Sign in with Apple**
 
-### Refresh automatique des 7 jours
+### Re-signer tous les 7 jours
 
-AltStore tourne en arrière-plan sur ton PC (AltServer system tray) et utilise mDNS sur le réseau local pour re-signer les apps avant expiration.
+Sideloadly **ne re-signe pas automatiquement** (contrairement à AltStore). Tu dois :
+1. Brancher l'iPhone tous les ~6 jours
+2. Lancer Sideloadly
+3. Drag le **même** IPA, **Start**, c'est re-signé
 
-**Conditions pour que ça marche tout seul:**
-1. AltServer lancé sur le PC (et PC allumé)
-2. iPhone et PC sur **le même Wi-Fi**
-3. AltStore ouvert au moins une fois en arrière-plan sur l'iPhone (Background App Refresh activé pour AltStore: **Réglages → Général → Actualisation en arrière-plan**)
+Ça prend ~2 minutes. Mets-toi un rappel hebdomadaire.
 
-Si une de ces conditions manque, tu devras re-signer manuellement: ouvre AltStore iPhone → **My Apps** → tape **Refresh** à côté de DriveTN.
+> Si tu as déjà téléchargé un IPA depuis GitHub, garde-le quelque part — pas besoin de re-télécharger pour juste re-signer.
 
 ---
 
 ## 5. Dépannage
 
-### "AltServer ne voit pas mon iPhone"
+### "Sideloadly ne voit pas mon iPhone"
 
-- Vérifie que **iTunes (version Apple, pas Microsoft Store)** est installé et a déjà ouvert l'iPhone une fois
-- Vérifie que **iCloud pour Windows** est installé
-- Dans iTunes: **Synchronisation Wi-Fi activée** pour cet iPhone
-- Débranche/rebranche le câble USB, "Faire confiance" à nouveau si demandé
-- Redémarre AltServer (clic droit système tray → Quit → relance)
+- Lance **iTunes** et vérifie qu'il détecte l'iPhone. Si non : pilote USB pas installé → réinstalle iTunes (version Apple, pas Microsoft Store)
+- Débranche / rebranche le câble USB
+- Sur l'iPhone, refais "Faire confiance à cet ordinateur"
+- Essaie un autre port USB ou un autre câble
+
+### "Could not connect to Apple servers" / erreur 1011 / "An error occurred while logging in"
+
+- Vérifie que ta connexion internet est stable
+- En Tunisie, certains réseaux mobiles bloquent des endpoints Apple — essaie en Wi-Fi
+- Si tu as la 2FA, tu **dois** utiliser un mot de passe spécifique app (étape 2.4), pas ton mot de passe normal
+- Désactive temporairement antivirus / firewall Windows pour tester
 
 ### "App won't install: bundle ID conflict"
 
-- Désinstalle l'ancienne version de DriveTN sur l'iPhone (appui long → Supprimer l'app)
-- Re-tente l'install via AltStore
+- Désinstalle l'ancienne version de DriveTN sur l'iPhone (appui long sur l'icône → Supprimer l'app)
+- Re-tente l'install
 
 ### "Untrusted Developer" au premier lancement
 
@@ -140,38 +143,31 @@ Si une de ces conditions manque, tu devras re-signer manuellement: ouvre AltStor
 
 ### "App expirée après 7 jours"
 
-- Ouvre AltStore iPhone → **My Apps** → tape **Refresh** à côté de DriveTN
-- Si ça échoue, re-drag l'IPA dans AltStore (procédure 3.4)
+- Refais l'étape 3.4 avec le même IPA. C'est ce qu'on appelle "re-signer".
 
-### Erreur de signature au premier lancement (code signing error)
+### Erreur "Provisioning profile" ou "guru meditation"
 
-- Redémarre l'iPhone (vraiment, ça résout pas mal de cas)
-- Refais l'étape 2.5 (faire confiance au profil)
-- Si toujours bloqué: désinstalle l'app, redémarre, ré-installe via AltStore
+- L'Apple ID a peut-être atteint la limite de 3 apps. Désinstalle d'autres apps sideloadées
+- OU : Apple a invalidé tes profils → connecte-toi sur appleid.apple.com et re-essaie
 
-### Erreur "Could not find Mail plugin" lors de l'install d'AltServer
+### "Maximum number of free certificates" (rare)
 
-- Lance **Mail** une fois sur Windows (l'app native), puis re-tente
-- Sinon réinstalle AltServer en mode admin
-
-### "Maximum number of apps installed" (3 apps max)
-
-- Désinstalle une autre app sideloadée pour libérer un slot
+- Apple limite à ~10 certificats actifs par Apple ID. Si tu changes souvent de PC ou réinstalles Sideloadly, tu peux les épuiser
+- Va dans Sideloadly → menu → **Tools → Reset certificates** pour libérer les anciens
 
 ---
 
 ## 6. Astuces
 
-- **Épingle AltServer au démarrage de Windows**: Win+R → `shell:startup` → glisse un raccourci d'AltServer. Le refresh auto fonctionne uniquement si AltServer tourne
-- **Garde l'iPhone sur le même Wi-Fi que le PC la nuit**: AltStore re-signe automatiquement avant expiration, tu n'as rien à faire
-- **Active Background App Refresh** pour AltStore sur l'iPhone (Réglages → Général → Actualisation en arrière-plan → AltStore: ON)
-- **Envoie l'IPA via iCloud Drive** depuis le PC vers l'iPhone — c'est le plus simple pour le passer à AltStore mobile (Files → iCloud Drive → DriveTN.ipa → Partager → AltStore)
-- **Garde le câble USB sous la main** pour le premier install et en cas de souci de refresh
-- **Nomme tes builds** dans `pubspec.yaml` (version + build number incrémenté à chaque push) pour t'y retrouver dans AltStore
+- **Garde le câble USB sous la main** — il sert à chaque install et à chaque re-sign
+- **Conserve le dernier IPA** dans un dossier dédié (`~/DriveTN/builds/`) pour pouvoir re-signer rapidement sans re-télécharger
+- **Mot de passe spécifique app** : crées-en un et stocke-le dans un gestionnaire de mots de passe — tu le réutiliseras à chaque re-sign
+- **Nomme tes builds** dans `pubspec.yaml` (incrémente `version: 0.1.0+1` à chaque push significatif) pour t'y retrouver
+- **VPN si réseau capricieux** : si ton FAI tunisien bloque des endpoints Apple, un VPN gratuit (ProtonVPN, Cloudflare WARP) règle le souci
 
 ### Install permanent (sans expiration 7 jours)
 
-Les seules options valides sont **payantes**:
-- **Apple Developer Program** à 99 $/an → signature ad-hoc valide 1 an, ou distribution via **TestFlight** (90 jours par build, jusqu'à 10 000 testeurs)
+Les seules options valides sont **payantes** :
+- **Apple Developer Program** à 99 $/an → signature ad-hoc valide 1 an, ou distribution via **TestFlight** (90 jours par build, jusqu'à 10 000 testeurs, pas besoin de câble)
 
-Pour du dev solo, le combo gratuit GitHub Actions + AltStore reste largement suffisant tant que tu acceptes le refresh hebdo.
+Pour du dev solo, le combo gratuit GitHub Actions + Sideloadly reste largement suffisant tant que tu acceptes le re-sign hebdo.
