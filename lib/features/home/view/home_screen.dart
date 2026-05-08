@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -13,7 +14,9 @@ import '../../../theme/app_typography.dart';
 import '../bloc/cars_cubit.dart';
 import '../bloc/cars_state.dart';
 import 'car_card.dart';
+import 'date_picker_sheet.dart';
 import 'filter_sheet.dart';
+import 'location_picker_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -216,11 +219,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Location pill (left)
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Lieu — mode démo')),
-                                );
+                              onTap: () async {
+                                final result = await LocationPickerSheet.show(context);
+                                if (result != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Lieu : $result')),
+                                  );
+                                }
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -268,11 +273,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Dates pill (right)
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Dates — mode démo')),
-                                );
+                              onTap: () async {
+                                final result = await DatePickerSheet.show(context);
+                                if (result != null && context.mounted) {
+                                  final fmt = DateFormat('d MMM HH:mm', 'fr_FR');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Période : ${fmt.format(result.$1)} → ${fmt.format(result.$2)}')),
+                                  );
+                                }
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
