@@ -165,7 +165,7 @@ class LoginScreen extends StatelessWidget {
                       label: 'Continuer en démo',
                       icon: LucideIcons.arrowRight,
                       variant: ButtonVariant.gradient,
-                      onPressed: () => context.go('/wizard'),
+                      onPressed: () => context.go('/search-choice'),
                     )
                         .animate()
                         .fadeIn(delay: 800.ms)

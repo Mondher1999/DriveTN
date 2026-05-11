@@ -12,12 +12,15 @@ import '../features/home/view/home_screen.dart';
 import '../features/identity/view/identity_scan_screen.dart';
 import '../features/inspection/bloc/inspection_state.dart';
 import '../features/inspection/view/video_360_screen.dart';
+import '../features/messages/view/conversation_screen.dart';
+import '../features/messages/view/messages_screen.dart';
 import '../features/my_rentals/view/my_rentals_screen.dart';
 import '../features/profile/view/profile_screen.dart';
 import '../features/rental/view/active_rental_screen.dart';
 import '../features/rental_detail/view/rental_detail_screen.dart';
 import '../features/return/view/return_success_screen.dart';
 import '../features/shell/view/main_shell.dart';
+import '../features/search_choice/view/search_choice_screen.dart';
 import '../features/splash/view/splash_screen.dart';
 import '../features/unlock/view/bluetooth_lock_screen.dart';
 import '../features/unlock/view/bluetooth_unlock_screen.dart';
@@ -59,6 +62,7 @@ class AppRouter {
     routes: [
       GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/search-choice', builder: (_, __) => const SearchChoiceScreen()),
       GoRoute(path: '/wizard', builder: (_, __) => const WizardScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
@@ -69,10 +73,23 @@ class AppRouter {
           GoRoute(
               path: '/home/rentals',
               builder: (_, __) => const MyRentalsScreen()),
+          GoRoute(
+              path: '/home/messages',
+              builder: (_, __) => const MessagesScreen()),
 GoRoute(
               path: '/home/profile',
               builder: (_, __) => const ProfileScreen()),
         ],
+      ),
+      GoRoute(
+        path: '/conversation/:id',
+        pageBuilder: (_, s) => _slideFadePage(
+          key: s.pageKey,
+          state: s,
+          child: ConversationScreen(
+            conversationId: s.pathParameters['id']!,
+          ),
+        ),
       ),
       GoRoute(
         path: '/car/:id',

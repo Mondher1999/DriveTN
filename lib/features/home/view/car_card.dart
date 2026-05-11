@@ -1,22 +1,22 @@
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../data/mock_data.dart';
 import '../../../data/models/car.dart';
-import '../../../shared/widgets/price_tag.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 
-/// Premium row card — Airbnb-style horizontal layout with full wow language:
-/// LIVE dot, PREMIUM badge for top-rated cars, animated price count-up,
-/// tap-scale feedback, entrance stagger.
+/// WOW card — glassmorphism, cinematic photo, micro-interactions.
+/// Premium experience faithful to the Sunset Tunisia palette.
 class CarCard extends StatefulWidget {
   final Car car;
   final VoidCallback onTap;
   final bool selected;
-  final double distanceKm;
   final int index;
 
   const CarCard({
@@ -24,7 +24,6 @@ class CarCard extends StatefulWidget {
     required this.car,
     required this.onTap,
     this.selected = false,
-    this.distanceKm = 2.4,
     this.index = 0,
   });
 
@@ -34,54 +33,14 @@ class CarCard extends StatefulWidget {
 
 class _CarCardState extends State<CarCard> {
   bool _pressed = false;
+  bool _liked = false;
 
   @override
   Widget build(BuildContext context) {
-    final card = AnimatedScale(
-      duration: const Duration(milliseconds: 140),
-      scale: _pressed ? 0.97 : (widget.selected ? 1.015 : 1.0),
-      curve: Curves.easeOut,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: widget.selected ? AppColors.accent : AppColors.border,
-            width: widget.selected ? 1.6 : 1,
-          ),
-          boxShadow: widget.selected
-              ? [
-                  BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.18),
-                    blurRadius: 26,
-                    offset: const Offset(0, 10),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: AppColors.ink.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        padding: const EdgeInsets.all(10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _photo(),
-            const SizedBox(width: 14),
-            Expanded(
-              child: SizedBox(height: 108, child: _info()),
-            ),
-          ],
-        ),
-      ),
-    );
+    final agency = MockData.agencyById(widget.car.agencyId);
+    final isTopPick = widget.car.rating >= 4.8 && widget.car.reviewsCount > 80;
 
-    final wrapped = GestureDetector(
+    return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) {
         setState(() => _pressed = false);
@@ -89,241 +48,461 @@ class _CarCardState extends State<CarCard> {
         widget.onTap();
       },
       onTapCancel: () => setState(() => _pressed = false),
-      child: widget.selected
-          ? card
-              .animate(onPlay: (c) => c.repeat(period: 2400.ms))
-              .shimmer(
-                duration: 1500.ms,
-                color: AppColors.accent.withValues(alpha: 0.22),
-                delay: 600.ms,
-              )
-          : card,
-    );
-
-    return wrapped
-        .animate()
-        .fadeIn(
-          duration: 380.ms,
-          delay: (60 * widget.index).ms,
-          curve: Curves.easeOut,
-        )
-        .slideY(
-          begin: 0.15,
-          end: 0,
-          duration: 380.ms,
-          delay: (60 * widget.index).ms,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 180),
+        scale: _pressed ? 0.965 : 1.0,
+        curve: Curves.easeOutCubic,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
-        );
+          margin: const EdgeInsets.only(bottom: 18),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: widget.selected
+                  ? AppColors.accent.withValues(alpha: 0.45)
+                  : AppColors.border,
+              width: widget.selected ? 1.5 : 0.8,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: -3,
+              ),
+              BoxShadow(
+                color: AppColors.accent.withValues(alpha: _pressed ? 0.08 : 0.0),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _photo(isTopPick),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    widget.car.brand.toUpperCase(),
+                                    style: AppTypography.caps(
+                                      size: 9,
+                                      letterSpacing: 1.6,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    width: 3,
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.borderStrong,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${widget.car.year}',
+                                    style: AppTypography.caps(
+                                      size: 9,
+                                      letterSpacing: 1.2,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                widget.car.model,
+                                style: AppTypography.h1(
+                                  size: 18,
+                                  weight: FontWeight.w800,
+                                  letterSpacing: -0.4,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Price with count-up
+                        _AnimatedPrice(
+                          value: widget.car.dailyPrice.toInt(),
+                          delayMs: 60 * widget.index,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Rating + agency
+                    Row(
+                      children: [
+                        Icon(Icons.star_rounded,
+                            size: 13, color: AppColors.warning),
+                        const SizedBox(width: 3),
+                        Text(
+                          widget.car.rating.toStringAsFixed(1),
+                          style: AppTypography.body(
+                            size: 12,
+                            weight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          ' (${widget.car.reviewsCount})',
+                          style: AppTypography.body(
+                            size: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: AppColors.borderStrong,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (agency != null)
+                          Expanded(
+                            child: Text(
+                              agency.name,
+                              style: AppTypography.body(
+                                size: 11,
+                                color: AppColors.textSecondary,
+                                weight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // Feature chips
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _chip(LucideIcons.users, '${widget.car.seats}p'),
+                        _chip(
+                          widget.car.transmission == Transmission.automatic
+                              ? LucideIcons.zap
+                              : LucideIcons.cog,
+                          widget.car.transmissionLabel,
+                        ),
+                        _chip(LucideIcons.fuel, widget.car.fuelLabel),
+                        _chip(LucideIcons.car, widget.car.categoryLabel),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: (50 * widget.index).ms)
+        .slideY(begin: 0.2, end: 0, duration: 400.ms, delay: (50 * widget.index).ms);
   }
 
-  // ------- Photo cluster (left) -------
-
-  Widget _photo() {
+  Widget _photo(bool isTopPick) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        width: 108,
-        height: 108,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+      child: AspectRatio(
+        aspectRatio: 16 / 10,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Warm gradient placeholder behind image
+            // Placeholder gradient
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                   colors: [Color(0xFFFFE4D6), Color(0xFFFFF1B8)],
                 ),
               ),
             ),
+            // Photo
             CachedNetworkImage(
               imageUrl: widget.car.photoUrls.first,
               fit: BoxFit.cover,
               placeholder: (_, __) => const SizedBox.shrink(),
               errorWidget: (_, __, ___) => const Center(
-                child: Icon(LucideIcons.car,
-                    size: 32, color: AppColors.textMuted),
+                child: Icon(LucideIcons.car, size: 40, color: AppColors.textMuted),
               ),
             ),
-            // Subtle bottom gradient for legibility
-            const Positioned(
-              left: 0, right: 0, bottom: 0, height: 36,
+            // Cinematic dark gradient top
+            Positioned(
+              top: 0, left: 0, right: 0, height: 80,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.45),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Cinematic dark gradient bottom
+            Positioned(
+              bottom: 0, left: 0, right: 0, height: 60,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black26],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.25),
+                    ],
                   ),
                 ),
               ),
             ),
-            // Bottom thin gradient meter (subtle "available" indicator)
-            Positioned(
-              left: 6,
-              right: 6,
-              bottom: 6,
-              child: Container(
-                height: 3,
-                decoration: BoxDecoration(
+            // TOP PICK badge (top-left, glassmorphic)
+            if (isTopPick)
+              Positioned(
+                top: 10, left: 10,
+                child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.gradientStart,
-                      AppColors.gradientEnd,
-                    ],
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded, size: 11, color: AppColors.surface),
+                          const SizedBox(width: 3),
+                          Text(
+                            'TOP CHOIX',
+                            style: AppTypography.caps(
+                              size: 8,
+                              letterSpacing: 1.2,
+                              color: AppColors.surface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .fadeIn(duration: 1600.ms, curve: Curves.easeInOut),
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 200.ms)
+                  .slideX(begin: -0.3, end: 0, duration: 500.ms, delay: 200.ms),
+            // Rating glassmorphic badge (top-left if no TOP PICK)
+            if (!isTopPick)
+              Positioned(
+                top: 10, left: 10,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.surface.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star_rounded, size: 12, color: AppColors.warning),
+                          const SizedBox(width: 3),
+                          Text(
+                            widget.car.rating.toStringAsFixed(1),
+                            style: AppTypography.body(size: 12, weight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            // Heart glassmorphic (top-right)
+            Positioned(
+              top: 10, right: 10,
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _liked = !_liked);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 34, height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.72),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.surface.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: AnimatedScale(
+                        duration: const Duration(milliseconds: 250),
+                        scale: _liked ? 1.2 : 1.0,
+                        curve: Curves.easeOutBack,
+                        child: Icon(
+                          _liked ? Icons.favorite : Icons.favorite_border,
+                          size: 16,
+                          color: _liked ? AppColors.danger : AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
+            // Photo pagination dots (if multiple photos)
+            if (widget.car.photoUrls.length > 1)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (int i = 0; i < widget.car.photoUrls.length.clamp(1, 5); i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        width: i == 0 ? 14 : 6,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: i == 0
+                              ? AppColors.surface
+                              : AppColors.surface.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            // LIVE dot (bottom-right, only if no pagination)
+            if (widget.car.photoUrls.length <= 1)
+              Positioned(
+                bottom: 10, right: 10,
+                child: Container(
+                  width: 9, height: 9,
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.surface, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.success.withValues(alpha: 0.5),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(begin: const Offset(1, 1), end: const Offset(1.3, 1.3), duration: 1200.ms),
+              ),
           ],
         ),
       ),
     );
   }
 
-  // ------- Info column (right) -------
-
-  Widget _info() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  widget.car.brand.toUpperCase(),
-                  style: AppTypography.caps(
-                    size: 9,
-                    letterSpacing: 1.6,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(LucideIcons.bluetooth,
-                          size: 9, color: AppColors.accent),
-                      const SizedBox(width: 3),
-                      Text(
-                        'Sans clé',
-                        style: AppTypography.caps(
-                          size: 8,
-                          letterSpacing: 1.2,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+  Widget _chip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: AppColors.textMuted),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: AppTypography.body(
+              size: 10,
+              weight: FontWeight.w600,
+              color: AppColors.textSecondary,
             ),
-            const SizedBox(height: 2),
-            Text(
-              widget.car.model,
-              style: AppTypography.h2(size: 18, weight: FontWeight.w800),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                _miniIcon(LucideIcons.users, '${widget.car.seats}'),
-                const SizedBox(width: 10),
-                _miniIcon(
-                    widget.car.transmission == Transmission.automatic
-                        ? LucideIcons.zap
-                        : LucideIcons.cog,
-                    widget.car.transmissionLabel),
-                const SizedBox(width: 10),
-                _miniIcon(LucideIcons.fuel, widget.car.fuelLabel),
-              ],
-            ),
-          ],
-        ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            _AnimatedPrice(
-              endValue: widget.car.dailyPrice.toInt(),
-              delayMs: 60 * widget.index,
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(LucideIcons.mapPin,
-                      size: 10, color: AppColors.textSecondary),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${widget.distanceKm.toStringAsFixed(1)} km',
-                    style: AppTypography.body(
-                      size: 10,
-                      weight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _miniIcon(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 10, color: AppColors.textMuted),
-        const SizedBox(width: 3),
-        Text(
-          text,
-          style: AppTypography.body(
-            size: 10,
-            weight: FontWeight.w600,
-            color: AppColors.textSecondary,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-/// Small helper that animates the price up from 0 on first appearance.
+/// Animated price counter with DT suffix.
 class _AnimatedPrice extends StatelessWidget {
-  final int endValue;
+  final int value;
   final int delayMs;
-  const _AnimatedPrice({required this.endValue, required this.delayMs});
+  const _AnimatedPrice({required this.value, required this.delayMs});
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: endValue.toDouble()),
-      duration: Duration(milliseconds: 700 + delayMs),
+    return TweenAnimationBuilder<int>(
+      tween: IntTween(begin: 0, end: value),
+      duration: Duration(milliseconds: 700 + delayMs.clamp(0, 500)),
       curve: Curves.easeOutCubic,
-      builder: (_, value, __) => PriceTag(price: value, size: 20),
+      builder: (_, v, __) => Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$v DT',
+            style: AppTypography.numeric(
+              size: 20,
+              weight: FontWeight.w900,
+              color: AppColors.accent,
+              letterSpacing: -0.5,
+            ),
+          ),
+          Text(
+            '/jour',
+            style: AppTypography.body(
+              size: 10,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

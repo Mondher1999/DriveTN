@@ -1516,19 +1516,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       const SizedBox(height: 32),
     ];
 
-    final List<Widget> animated = [
-      for (int i = 0; i < sections.length; i++)
-        sections[i].animate().fadeIn(
-              delay: (i * 80).ms,
-              duration: 400.ms,
-            ).slideY(
-              begin: 0.06,
-              end: 0,
-              duration: 400.ms,
-              curve: Curves.easeOutCubic,
-            ),
-    ];
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -1577,7 +1564,24 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
             ],
           ),
           SliverList(
-            delegate: SliverChildListDelegate(animated),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final delayMs = (i * 15).clamp(0, 200);
+                return sections[i]
+                    .animate()
+                    .fadeIn(
+                      delay: delayMs.ms,
+                      duration: 300.ms,
+                    )
+                    .slideY(
+                      begin: 0.04,
+                      end: 0,
+                      duration: 300.ms,
+                      curve: Curves.easeOutCubic,
+                    );
+              },
+              childCount: sections.length,
+            ),
           ),
         ],
       ),

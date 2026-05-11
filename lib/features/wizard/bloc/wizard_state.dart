@@ -3,12 +3,35 @@ import 'package:flutter/material.dart';
 
 import '../../../data/models/car.dart';
 
-enum WizardUseCase { city, business, weekend, family, electric }
-enum WizardCarType { city, sedan, suv, utility, electric, any }
+enum WizardUseCase { business, tourism, event, longTerm }
+enum WizardCarType { city, sedan, suv, fourByFour, convertible, coupe }
 enum WizardFuel { gasoline, diesel, hybrid, any }
 enum WizardSeats { small, medium, large }
 enum WizardTransmission { automatic, manual, any }
-enum WizardPickup { tunisCentre, laMarsa, lac1, lac2, ariana, soukra, carthage, any }
+enum WizardPickup {
+  tunisCentre,
+  laMarsa,
+  lac1,
+  lac2,
+  ariana,
+  soukra,
+  carthage,
+  aeroportTunisCarthage,
+  aeroportDjerbaZarzis,
+  aeroportMonastir,
+  aeroportSfax,
+  djerba,
+  djerbaHoumetSouk,
+  djerbaMidoun,
+  djerbaZoneTouristique,
+  hammamet,
+  mahdia,
+  monastir,
+  sfax,
+  sousse,
+  tunis,
+  any,
+}
 
 class WizardState extends Equatable {
   final int step;
@@ -83,23 +106,22 @@ class WizardState extends Equatable {
   }
 
   Set<CarCategory> get matchedCategories {
-    if (carType != null && carType != WizardCarType.any) {
+    if (carType != null) {
       switch (carType!) {
         case WizardCarType.city: return {CarCategory.city};
         case WizardCarType.sedan: return {CarCategory.sedan};
         case WizardCarType.suv: return {CarCategory.suv};
-        case WizardCarType.utility: return {CarCategory.utility};
-        case WizardCarType.electric: return {CarCategory.electric};
-        case WizardCarType.any: return const {};
+        case WizardCarType.fourByFour: return {CarCategory.fourByFour};
+        case WizardCarType.convertible: return {CarCategory.convertible};
+        case WizardCarType.coupe: return {CarCategory.coupe};
       }
     }
     if (useCase == null) return const {};
     switch (useCase!) {
-      case WizardUseCase.city: return {CarCategory.city};
-      case WizardUseCase.business: return {CarCategory.sedan};
-      case WizardUseCase.weekend: return {CarCategory.suv, CarCategory.sedan};
-      case WizardUseCase.family: return {CarCategory.suv, CarCategory.utility};
-      case WizardUseCase.electric: return {CarCategory.electric};
+      case WizardUseCase.business: return {CarCategory.sedan, CarCategory.city};
+      case WizardUseCase.tourism: return {CarCategory.suv, CarCategory.convertible, CarCategory.fourByFour};
+      case WizardUseCase.event: return {CarCategory.sedan, CarCategory.coupe, CarCategory.convertible};
+      case WizardUseCase.longTerm: return const {}; // no category filter
     }
   }
 

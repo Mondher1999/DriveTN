@@ -9,8 +9,8 @@ class WizardCubit extends Cubit<WizardState> {
   void setUseCase(WizardUseCase v) => emit(state.copyWith(useCase: v));
   void setCarType(WizardCarType v) => emit(state.copyWith(carType: v));
   void setStartDate(DateTime d) {
-    DateTime end = state.endDate ?? d.add(const Duration(days: 1));
-    if (!end.isAfter(d)) end = d.add(const Duration(days: 1));
+    DateTime end = state.endDate ?? d.add(const Duration(hours: 1));
+    if (!end.isAfter(d)) end = d.add(const Duration(hours: 1));
     emit(state.copyWith(startDate: d, endDate: end));
   }
   void setEndDate(DateTime d) {

@@ -60,13 +60,27 @@ class CarsCubit extends Cubit<CarsState> {
     }
   }
 
-  void resetFilters() {
+  void setSearchLocation(String? location) {
+    emit(state.copyWith(searchLocation: location));
+  }
+
+  void setSearchDates((DateTime, DateTime)? dates) {
+    emit(state.copyWith(searchDates: dates));
+  }
+
+  void toggleViewMode() {
     emit(state.copyWith(
-      priceRange: const RangeValues(0, 300),
-      selectedCategories: const {},
-      selectedTransmissions: const {},
-      selectedFuels: const {},
+      viewMode: state.viewMode == ViewMode.map ? ViewMode.list : ViewMode.map,
+    ));
+  }
+
+  void resetFilters() {
+    emit(CarsState(
+      allCars: state.allCars,
       filteredCars: state.allCars,
+      selectedCarId: state.selectedCarId,
+      isLoading: state.isLoading,
+      viewMode: state.viewMode,
     ));
   }
 }

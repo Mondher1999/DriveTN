@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'features/booking/bloc/booking_cubit.dart';
 import 'features/home/bloc/cars_cubit.dart';
 import 'features/inspection/bloc/inspection_cubit.dart';
+import 'features/messages/bloc/messages_cubit.dart';
 import 'features/rental/bloc/rental_cubit.dart';
 import 'features/wizard/bloc/wizard_cubit.dart';
 import 'routing/app_router.dart';
@@ -20,6 +21,7 @@ class DriveTNApp extends StatelessWidget {
         BlocProvider(create: (_) => CarsCubit()),
         BlocProvider(create: (_) => BookingCubit()),
         BlocProvider(create: (_) => InspectionCubit()),
+        BlocProvider(create: (_) => MessagesCubit()),
         BlocProvider(create: (_) => RentalCubit()),
         BlocProvider(create: (_) => WizardCubit()),
       ],

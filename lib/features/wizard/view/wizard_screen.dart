@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -24,6 +25,20 @@ class WizardScreen extends StatelessWidget {
           minSeats: state.minSeats,
           maxSeats: state.maxSeats,
         );
+
+    if (state.pickup != null) {
+      final items = _pickupItems();
+      final item = items.firstWhere(
+        (i) => i.value == state.pickup,
+        orElse: () => items.last,
+      );
+      context.read<CarsCubit>().setSearchLocation(item.label);
+    }
+
+    if (state.startDate != null && state.endDate != null) {
+      context.read<CarsCubit>().setSearchDates((state.startDate!, state.endDate!));
+    }
+
     context.go('/home/explorer');
   }
 
@@ -188,11 +203,10 @@ class WizardScreen extends StatelessWidget {
   // --- Step 1: Use case ---
   Widget _stepUseCase(BuildContext context, WizardState state) {
     final items = <(WizardUseCase, IconData, String, String, String?)>[
-      (WizardUseCase.city, LucideIcons.building, 'Ville', 'Citadine pratique', null),
-      (WizardUseCase.business, LucideIcons.briefcase, 'Business', 'Berline élégante', null),
-      (WizardUseCase.weekend, LucideIcons.sun, 'Weekend', "Pour s'évader", 'POPULAIRE'),
-      (WizardUseCase.family, LucideIcons.users, 'Famille', 'SUV spacieux', null),
-      (WizardUseCase.electric, LucideIcons.zap, 'Électrique', '0 émission', 'ÉCO'),
+      (WizardUseCase.business, LucideIcons.briefcase, 'Business', 'Déplacements professionnels', null),
+      (WizardUseCase.tourism, LucideIcons.mapPin, 'Tourisme', 'Visites & vacances', 'POPULAIRE'),
+      (WizardUseCase.event, LucideIcons.partyPopper, 'Événement', 'Mariage, fête, cérémonie', 'TRENDING'),
+      (WizardUseCase.longTerm, LucideIcons.calendar, 'Longue durée', 'Location mensuelle', null),
     ];
     return _stepLayout(
       label: '— ÉTAPE 1 / 8',
@@ -233,10 +247,10 @@ class WizardScreen extends StatelessWidget {
     final items = <(WizardCarType, IconData, String, String, String?)>[
       (WizardCarType.city, LucideIcons.car, 'Citadine', 'Compacte & agile', null),
       (WizardCarType.sedan, LucideIcons.car, 'Berline', 'Confort & élégance', 'POPULAIRE'),
-      (WizardCarType.suv, LucideIcons.truck, 'SUV', 'Espace & robustesse', null),
-      (WizardCarType.utility, LucideIcons.package, 'Utilitaire', 'Cargo & déménagement', null),
-      (WizardCarType.electric, LucideIcons.zap, 'Électrique', '0 émission', 'ÉCO'),
-      (WizardCarType.any, LucideIcons.shuffle, 'Peu importe', 'Toutes options', null),
+      (WizardCarType.suv, LucideIcons.mountain, 'SUV', 'Espace & robustesse', null),
+      (WizardCarType.fourByFour, LucideIcons.trees, '4x4', 'Tout-terrain', null),
+      (WizardCarType.convertible, LucideIcons.wind, 'Cabriolet', 'Toit ouvert', null),
+      (WizardCarType.coupe, LucideIcons.zap, 'Coupé', 'Sport & design', null),
     ];
     return _stepLayout(
       label: '— ÉTAPE 2 / 8',
@@ -272,161 +286,12 @@ class WizardScreen extends StatelessWidget {
 
   // --- Step 3: Dates ---
   Widget _stepDates(BuildContext context, WizardState state) {
-    final fmt = DateFormat('d MMM yyyy', 'fr_FR');
-    final today = DateTime.now();
     return _stepLayout(
       label: '— ÉTAPE 3 / 8',
       title: 'Quelles',
       titleItalic: 'dates ?',
       subtitle: 'Quand voulez-vous partir ?',
-      child: Column(
-        children: [
-          _dateRow(
-            context: context,
-            label: 'DÉBUT',
-            date: state.startDate,
-            formatted: state.startDate != null ? fmt.format(state.startDate!) : 'Choisir',
-            isPlaceholder: state.startDate == null,
-            icon: LucideIcons.calendar,
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: state.startDate ?? today,
-                firstDate: today,
-                lastDate: today.add(const Duration(days: 90)),
-                locale: const Locale('fr', 'FR'),
-                builder: (c, child) => Theme(
-                  data: Theme.of(c).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: AppColors.accent,
-                      onPrimary: AppColors.surface,
-                      onSurface: AppColors.ink,
-                    ),
-                  ),
-                  child: child!,
-                ),
-              );
-              if (picked != null && context.mounted) {
-                context.read<WizardCubit>().setStartDate(picked);
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          _dateRow(
-            context: context,
-            label: 'FIN',
-            date: state.endDate,
-            formatted: state.endDate != null ? fmt.format(state.endDate!) : 'Choisir',
-            isPlaceholder: state.endDate == null,
-            icon: LucideIcons.calendarDays,
-            onTap: () async {
-              final base = state.startDate ?? today;
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: state.endDate ?? base.add(const Duration(days: 1)),
-                firstDate: base.add(const Duration(days: 1)),
-                lastDate: base.add(const Duration(days: 90)),
-                locale: const Locale('fr', 'FR'),
-                builder: (c, child) => Theme(
-                  data: Theme.of(c).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: AppColors.accent,
-                      onPrimary: AppColors.surface,
-                      onSurface: AppColors.ink,
-                    ),
-                  ),
-                  child: child!,
-                ),
-              );
-              if (picked != null && context.mounted) {
-                context.read<WizardCubit>().setEndDate(picked);
-              }
-            },
-          ),
-          if (state.startDate != null && state.endDate != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.softWarm, AppColors.softWarm.withValues(alpha: 0.4)],
-                ),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.accent.withValues(alpha: 0.18)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(LucideIcons.clock, size: 16, color: AppColors.accent),
-                  const SizedBox(width: 8),
-                  Text('DURÉE', style: AppTypography.caps(size: 10, letterSpacing: 1.6, color: AppColors.textMuted)),
-                  const Spacer(),
-                  Text(
-                    '${state.durationDays} jour${state.durationDays > 1 ? 's' : ''}',
-                    style: AppTypography.numeric(size: 18, weight: FontWeight.w900, color: AppColors.accent, letterSpacing: -0.4),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _dateRow({
-    required BuildContext context,
-    required String label,
-    required DateTime? date,
-    required String formatted,
-    required bool isPlaceholder,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isPlaceholder ? AppColors.border : AppColors.accent.withValues(alpha: 0.4),
-            width: isPlaceholder ? 1 : 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.softWarm,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, size: 22, color: AppColors.accent),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(label, style: AppTypography.caps(size: 9, letterSpacing: 1.6, color: AppColors.textMuted)),
-                  const SizedBox(height: 2),
-                  Text(
-                    formatted,
-                    style: AppTypography.h2(
-                      size: 17,
-                      weight: FontWeight.w800,
-                      color: isPlaceholder ? AppColors.textMuted : AppColors.ink,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.textMuted),
-          ],
-        ),
-      ),
+      child: _StepDatesPicker(state: state),
     );
   }
 
@@ -652,49 +517,51 @@ class WizardScreen extends StatelessWidget {
 
   // --- Step 8: Pickup ---
   Widget _stepPickup(BuildContext context, WizardState state) {
-    final items = <(WizardPickup, IconData, String, String)>[
-      (WizardPickup.tunisCentre, LucideIcons.building, 'Tunis Centre', 'Avenue Bourguiba'),
-      (WizardPickup.laMarsa, LucideIcons.palmtree, 'La Marsa', 'Front de mer'),
-      (WizardPickup.lac1, LucideIcons.briefcase, 'Lac 1', 'Quartier d\'affaires'),
-      (WizardPickup.lac2, LucideIcons.building2, 'Lac 2', 'Centre business'),
-      (WizardPickup.ariana, LucideIcons.home, 'Ariana', 'Résidentiel nord'),
-      (WizardPickup.soukra, LucideIcons.trees, 'Soukra', 'Parcs & verdure'),
-      (WizardPickup.carthage, LucideIcons.landmark, 'Carthage', 'Site historique'),
-      (WizardPickup.any, LucideIcons.shuffle, 'Peu importe', 'Au choix de l\'agence'),
-    ];
+    final items = _pickupItems();
     return _stepLayout(
       label: '— ÉTAPE 8 / 8',
       title: 'Lieu de',
       titleItalic: 'prise en charge ?',
       subtitle: 'Le quartier où récupérer (et restituer) la voiture.',
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.18,
-        children: [
-          for (final item in items)
-            _premiumTile(
-              selected: state.pickup == item.$1,
-              icon: item.$2,
-              title: item.$3,
-              caption: item.$4,
-              badge: null,
-              onTap: () async {
-                HapticFeedback.mediumImpact();
-                context.read<WizardCubit>().setPickup(item.$1);
-                await Future.delayed(const Duration(milliseconds: 420));
-                if (context.mounted) {
-                  _finish(context, context.read<WizardCubit>().state);
-                }
-              },
-            ),
-        ],
+      child: _PickupDropdown(
+        value: state.pickup,
+        items: items,
+        onChanged: (v) async {
+          HapticFeedback.mediumImpact();
+          context.read<WizardCubit>().setPickup(v);
+          await Future.delayed(const Duration(milliseconds: 420));
+          if (context.mounted) {
+            _finish(context, context.read<WizardCubit>().state);
+          }
+        },
       ),
     );
   }
+
+  List<_PickupItem> _pickupItems() => const [
+    _PickupItem(WizardPickup.aeroportTunisCarthage, LucideIcons.plane, 'Aéroport Tunis-Carthage (TUN)'),
+    _PickupItem(WizardPickup.aeroportDjerbaZarzis, LucideIcons.plane, 'Aéroport Djerba-Zarzis (DJE)'),
+    _PickupItem(WizardPickup.aeroportMonastir, LucideIcons.plane, 'Aéroport Monastir (MIR)'),
+    _PickupItem(WizardPickup.aeroportSfax, LucideIcons.plane, 'Aéroport Sfax (SFA)'),
+    _PickupItem(WizardPickup.djerba, LucideIcons.palmtree, 'Djerba'),
+    _PickupItem(WizardPickup.djerbaHoumetSouk, LucideIcons.palmtree, 'Djerba-Houmet Souk'),
+    _PickupItem(WizardPickup.djerbaMidoun, LucideIcons.palmtree, 'Djerba-Midoun'),
+    _PickupItem(WizardPickup.djerbaZoneTouristique, LucideIcons.palmtree, 'Djerba-Zone Touristique'),
+    _PickupItem(WizardPickup.hammamet, LucideIcons.umbrella, 'Hammamet'),
+    _PickupItem(WizardPickup.mahdia, LucideIcons.landmark, 'Mahdia'),
+    _PickupItem(WizardPickup.monastir, LucideIcons.landmark, 'Monastir'),
+    _PickupItem(WizardPickup.sfax, LucideIcons.building, 'Sfax'),
+    _PickupItem(WizardPickup.sousse, LucideIcons.building, 'Sousse'),
+    _PickupItem(WizardPickup.tunis, LucideIcons.building, 'Tunis'),
+    _PickupItem(WizardPickup.tunisCentre, LucideIcons.building, 'Tunis Centre'),
+    _PickupItem(WizardPickup.laMarsa, LucideIcons.waves, 'La Marsa'),
+    _PickupItem(WizardPickup.lac1, LucideIcons.briefcase, 'Lac 1'),
+    _PickupItem(WizardPickup.lac2, LucideIcons.building2, 'Lac 2'),
+    _PickupItem(WizardPickup.ariana, LucideIcons.home, 'Ariana'),
+    _PickupItem(WizardPickup.soukra, LucideIcons.trees, 'Soukra'),
+    _PickupItem(WizardPickup.carthage, LucideIcons.landmark, 'Carthage'),
+    _PickupItem(WizardPickup.any, LucideIcons.shuffle, 'Peu importe'),
+  ];
 
   // --- shared layout for steps ---
   Widget _stepLayout({
@@ -718,29 +585,27 @@ class WizardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                title,
-                style: AppTypography.display(
-                  size: 36,
-                  weight: FontWeight.w900,
-                  letterSpacing: -1.4,
-                ),
+          RichText(
+            text: TextSpan(
+              style: AppTypography.display(
+                size: 36,
+                weight: FontWeight.w900,
+                letterSpacing: -1.4,
               ),
-              const SizedBox(width: 8),
-              Text(
-                titleItalic,
-                style: AppTypography.display(
-                  size: 36,
-                  weight: FontWeight.w300,
-                  italic: true,
-                  letterSpacing: -1.4,
+              children: [
+                TextSpan(text: title),
+                const WidgetSpan(child: SizedBox(width: 8)),
+                TextSpan(
+                  text: titleItalic,
+                  style: AppTypography.display(
+                    size: 36,
+                    weight: FontWeight.w300,
+                    italic: true,
+                    letterSpacing: -1.4,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -1144,6 +1009,698 @@ class WizardScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pickup dropdown helpers
+// ---------------------------------------------------------------------------
+
+class _PickupItem {
+  final WizardPickup value;
+  final IconData icon;
+  final String label;
+  const _PickupItem(this.value, this.icon, this.label);
+}
+
+class _PickupDropdown extends StatefulWidget {
+  final WizardPickup? value;
+  final List<_PickupItem> items;
+  final ValueChanged<WizardPickup> onChanged;
+
+  const _PickupDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  State<_PickupDropdown> createState() => _PickupDropdownState();
+}
+
+class _PickupDropdownState extends State<_PickupDropdown> {
+  bool _open = false;
+  final TextEditingController _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<_PickupItem> get _filtered {
+    final q = _searchCtrl.text.trim().toLowerCase();
+    if (q.isEmpty) return widget.items;
+    return widget.items.where((i) => i.label.toLowerCase().contains(q)).toList();
+  }
+
+  String get _selectedLabel {
+    final found = widget.items.firstWhere(
+      (i) => i.value == widget.value,
+      orElse: () => widget.items.last,
+    );
+    return found.label;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label row
+        Row(
+          children: [
+            const Icon(LucideIcons.mapPin, size: 16, color: AppColors.accent),
+            const SizedBox(width: 6),
+            Text(
+              'Lieu de prise',
+              style: AppTypography.body(
+                size: 13,
+                weight: FontWeight.w700,
+                color: AppColors.accent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Dropdown trigger / expanded panel
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            setState(() => _open = !_open);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.ink.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Trigger bar (always visible)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _selectedLabel,
+                          style: AppTypography.h2(
+                            size: 15,
+                            weight: FontWeight.w700,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: _open ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 260),
+                        child: const Icon(
+                          LucideIcons.chevronDown,
+                          size: 18,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Expanded list
+                AnimatedCrossFade(
+                  firstChild: const SizedBox.shrink(),
+                  secondChild: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Divider(height: 1, color: AppColors.border),
+                      // Search field
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: TextField(
+                          controller: _searchCtrl,
+                          onChanged: (_) => setState(() {}),
+                          style: AppTypography.body(size: 14, color: AppColors.ink),
+                          decoration: InputDecoration(
+                            hintText: 'Rechercher…',
+                            hintStyle: AppTypography.body(
+                              size: 14,
+                              color: AppColors.textMuted,
+                            ),
+                            prefixIcon: const Icon(
+                              LucideIcons.search,
+                              size: 18,
+                              color: AppColors.textMuted,
+                            ),
+                            filled: true,
+                            fillColor: AppColors.softWarm.withValues(alpha: 0.5),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.accent,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1, color: AppColors.border),
+                      // Options list
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 280),
+                        child: Scrollbar(
+                          thumbVisibility: true,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            itemCount: _filtered.length,
+                            itemBuilder: (context, index) {
+                              final item = _filtered[index];
+                              final selected = widget.value == item.value;
+                              return InkWell(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() => _open = false);
+                                  widget.onChanged(item.value);
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: selected
+                                        ? const LinearGradient(
+                                            colors: [
+                                              AppColors.gradientStart,
+                                              AppColors.gradientEnd,
+                                            ],
+                                          )
+                                        : null,
+                                    color: selected ? null : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        item.icon,
+                                        size: 18,
+                                        color: selected
+                                            ? AppColors.surface
+                                            : AppColors.accent,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          item.label,
+                                          style: AppTypography.body(
+                                            size: 14,
+                                            weight: selected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                            color: selected
+                                                ? AppColors.surface
+                                                : AppColors.ink,
+                                          ),
+                                        ),
+                                      ),
+                                      if (selected)
+                                        const Icon(
+                                          LucideIcons.check,
+                                          size: 16,
+                                          color: AppColors.surface,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+                  ),
+                  crossFadeState: _open
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 260),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inline date picker (Step 3)
+// ---------------------------------------------------------------------------
+
+class _StepDatesPicker extends StatefulWidget {
+  final WizardState state;
+  const _StepDatesPicker({required this.state});
+
+  @override
+  State<_StepDatesPicker> createState() => _StepDatesPickerState();
+}
+
+class _StepDatesPickerState extends State<_StepDatesPicker> {
+  bool _isStart = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final start = widget.state.startDate ?? today;
+    final end = widget.state.endDate ?? start.add(const Duration(days: 1));
+    final fmt = DateFormat('d MMM yyyy', 'fr_FR');
+    final fmtTime = DateFormat('HH:mm', 'fr_FR');
+
+    final pickerDate = _isStart ? start : end;
+    final minDate = _isStart
+        ? DateTime(today.year, today.month, today.day)
+        : start;
+    final maxDate = today.add(const Duration(days: 90));
+    final hasBoth = widget.state.startDate != null && widget.state.endDate != null;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Début / Fin pills — glassmorphism style
+        Row(
+          children: [
+            Expanded(
+              child: _DatePill(
+                label: 'Début',
+                dateText: widget.state.startDate != null
+                    ? fmt.format(widget.state.startDate!)
+                    : 'Choisir',
+                timeText: widget.state.startDate != null
+                    ? fmtTime.format(widget.state.startDate!)
+                    : '--:--',
+                selected: _isStart,
+                onTap: () => setState(() => _isStart = true),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _DatePill(
+                label: 'Fin',
+                dateText: widget.state.endDate != null
+                    ? fmt.format(widget.state.endDate!)
+                    : 'Choisir',
+                timeText: widget.state.endDate != null
+                    ? fmtTime.format(widget.state.endDate!)
+                    : '--:--',
+                selected: !_isStart,
+                onTap: () => setState(() => _isStart = false),
+              ),
+            ),
+          ],
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+        const SizedBox(height: 20),
+        // Cupertino wheel picker — premium container
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: 220,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _isStart
+                  ? AppColors.accent.withValues(alpha: 0.25)
+                  : AppColors.border,
+              width: _isStart ? 1.5 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+                spreadRadius: -2,
+              ),
+              if (_isStart)
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6),
+                ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                cupertinoOverrideTheme: CupertinoThemeData(
+                  textTheme: CupertinoTextThemeData(
+                    dateTimePickerTextStyle: AppTypography.body(
+                      size: 20,
+                      weight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                ),
+              ),
+              child: CupertinoDatePicker(
+                key: ValueKey(_isStart ? 'start' : 'end'),
+                mode: CupertinoDatePickerMode.dateAndTime,
+                initialDateTime: pickerDate,
+                minimumDate: minDate,
+                maximumDate: maxDate,
+                onDateTimeChanged: (date) {
+                  if (_isStart) {
+                    context.read<WizardCubit>().setStartDate(date);
+                  } else {
+                    context.read<WizardCubit>().setEndDate(date);
+                  }
+                },
+              ),
+            ),
+          ),
+        )
+            .animate()
+            .fadeIn(duration: 400.ms, delay: 100.ms)
+            .slideY(begin: 0.15, end: 0, duration: 400.ms, delay: 100.ms),
+        // Duration badge — glassmorphism
+        if (hasBoth) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.softWarm,
+                  AppColors.softWarm.withValues(alpha: 0.3),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.15),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    LucideIcons.clock,
+                    size: 16,
+                    color: AppColors.surface,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'DURÉE DE LOCATION',
+                      style: AppTypography.caps(
+                        size: 9,
+                        letterSpacing: 1.6,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${widget.state.durationDays} jour${widget.state.durationDays > 1 ? 's' : ''}',
+                      style: AppTypography.numeric(
+                        size: 20,
+                        weight: FontWeight.w900,
+                        color: AppColors.accent,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // Mini calendar visual
+                _miniCalendar(widget.state.startDate!, widget.state.endDate!),
+              ],
+            ),
+          )
+              .animate()
+              .fadeIn(duration: 400.ms, delay: 200.ms)
+              .slideY(begin: 0.1, end: 0, duration: 400.ms, delay: 200.ms),
+        ] else ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.calendarClock,
+                    size: 18, color: AppColors.textMuted),
+                const SizedBox(width: 10),
+                Text(
+                  'Sélectionnez les deux dates',
+                  style: AppTypography.body(
+                    size: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          )
+              .animate()
+              .fadeIn(duration: 400.ms, delay: 200.ms),
+        ],
+      ],
+    );
+  }
+
+  Widget _miniCalendar(DateTime start, DateTime end) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _calBox(start.day.toString(), DateFormat('MMM', 'fr_FR').format(start)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Container(
+            width: 16,
+            height: 2,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.gradientStart, AppColors.gradientEnd],
+              ),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+        _calBox(end.day.toString(), DateFormat('MMM', 'fr_FR').format(end)),
+      ],
+    );
+  }
+
+  Widget _calBox(String day, String month) {
+    return Container(
+      width: 42,
+      height: 46,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            month.toUpperCase(),
+            style: AppTypography.caps(
+              size: 7,
+              letterSpacing: 1,
+              color: AppColors.textMuted,
+            ),
+          ),
+          Text(
+            day,
+            style: AppTypography.numeric(
+              size: 16,
+              weight: FontWeight.w900,
+              color: AppColors.ink,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DatePill extends StatelessWidget {
+  final String label;
+  final String dateText;
+  final String timeText;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _DatePill({
+    required this.label,
+    required this.dateText,
+    this.timeText = '',
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.gradientStart,
+                    AppColors.gradientEnd,
+                  ],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surface,
+                    AppColors.softWarm.withValues(alpha: 0.3),
+                  ],
+                ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected
+                ? Colors.transparent
+                : AppColors.border,
+            width: selected ? 0 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: 0.35),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: AppColors.ink.withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.caps(
+                    size: 9,
+                    letterSpacing: 1.8,
+                    color: selected
+                        ? AppColors.surface.withValues(alpha: 0.9)
+                        : AppColors.textMuted,
+                  ),
+                ),
+                if (selected) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.surface.withValues(alpha: 0.5),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .fadeIn(duration: 1000.ms, curve: Curves.easeInOut),
+                ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              dateText,
+              style: AppTypography.h2(
+                size: 15,
+                weight: FontWeight.w800,
+                color: selected ? AppColors.surface : AppColors.ink,
+              ),
+            ),
+            if (timeText.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                timeText,
+                style: AppTypography.body(
+                  size: 12,
+                  weight: FontWeight.w600,
+                  color: selected
+                      ? AppColors.surface.withValues(alpha: 0.85)
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -8,18 +8,20 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 
-/// Floating premium bottom tab bar.
-/// - Frosted glass surface, detached from screen edges with margin.
-/// - Sliding gradient pill that animates between active tabs.
-/// - Coral dot above active tab + scale-up icon.
+/// Modern floating bottom tab bar.
+/// - Frosted-glass white capsule, detached with margin.
+/// - Subtle light pill behind the active tab.
+/// - 4 tabs: icon + label, horizontal layout.
+/// - Coral accent for active; muted grey for inactive.
 class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
   static const _tabs = [
-    ('/home/explorer', LucideIcons.map, 'Explorer'),
-    ('/home/rentals', LucideIcons.calendar, 'Locations'),
-    ('/home/profile', LucideIcons.user, 'Profil'),
+    ('/home/explorer', LucideIcons.search, 'Recherche'),
+    ('/home/rentals', LucideIcons.key, 'Locations'),
+    ('/home/messages', LucideIcons.messageSquare, 'Messagerie'),
+    ('/home/profile', LucideIcons.user, 'Compte'),
   ];
 
   int _indexOfLocation(String location) {
@@ -42,25 +44,20 @@ class MainShell extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(999),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
               child: Container(
-                height: 72,
+                height: 60,
                 decoration: BoxDecoration(
                   color: AppColors.surface.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: AppColors.border),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.ink.withValues(alpha: 0.10),
-                      blurRadius: 28,
-                      offset: const Offset(0, 12),
-                    ),
-                    BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.10),
-                      blurRadius: 32,
-                      offset: const Offset(0, 4),
+                      color: AppColors.ink.withValues(alpha: 0.06),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
@@ -69,33 +66,19 @@ class MainShell extends StatelessWidget {
                     final tabWidth = constraints.maxWidth / _tabs.length;
                     return Stack(
                       children: [
-                        // Sliding gradient pill behind active tab
+                        // Subtle pill behind active tab
                         AnimatedPositioned(
-                          duration: const Duration(milliseconds: 360),
+                          duration: const Duration(milliseconds: 320),
                           curve: Curves.easeOutCubic,
-                          left: tabWidth * currentIndex + 8,
-                          top: 8,
-                          bottom: 8,
-                          width: tabWidth - 16,
+                          left: tabWidth * currentIndex + 4,
+                          top: 4,
+                          bottom: 4,
+                          width: tabWidth - 8,
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.gradientStart,
-                                  AppColors.gradientEnd,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.accent
-                                      .withValues(alpha: 0.4),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: AppColors.border),
                             ),
                           ),
                         ),
@@ -144,39 +127,30 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.surface : AppColors.textMuted;
+    final color = active ? AppColors.accent : AppColors.textMuted;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Center(
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedScale(
-              duration: const Duration(milliseconds: 280),
+              duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutBack,
-              scale: active ? 1.0 : 0.94,
-              child: Icon(icon, size: 19, color: color),
+              scale: active ? 1.05 : 0.92,
+              child: Icon(icon, size: 20, color: color),
             ),
-            // Label only when active — keeps bar clean
-            AnimatedSize(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              child: active
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text(
-                        label,
-                        style: AppTypography.body(
-                          size: 13,
-                          weight: FontWeight.w800,
-                          color: AppColors.surface,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: AppTypography.body(
+                size: 11,
+                weight: active ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+                letterSpacing: -0.2,
+              ),
             ),
           ],
         ),

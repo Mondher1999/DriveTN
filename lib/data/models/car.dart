@@ -1,7 +1,20 @@
 import 'package:equatable/equatable.dart';
 import 'package:latlong2/latlong.dart';
 
-enum CarCategory { city, sedan, suv, utility, electric }
+enum CarCategory {
+  city,
+  sedan,
+  suv,
+  utility,
+  electric,
+  family,
+  minibus,
+  fourByFour,
+  convertible,
+  coupe,
+  collection,
+  camperVan,
+}
 
 enum Transmission { manual, automatic }
 
@@ -60,6 +73,20 @@ class Car extends Equatable {
         return 'Utilitaire';
       case CarCategory.electric:
         return 'Électrique';
+      case CarCategory.family:
+        return 'Familiale';
+      case CarCategory.minibus:
+        return 'Minibus';
+      case CarCategory.fourByFour:
+        return '4x4';
+      case CarCategory.convertible:
+        return 'Cabriolet';
+      case CarCategory.coupe:
+        return 'Coupé';
+      case CarCategory.collection:
+        return 'Collection';
+      case CarCategory.camperVan:
+        return 'Van aménagé';
     }
   }
 

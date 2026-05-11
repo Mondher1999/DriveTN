@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import '../../../data/models/car.dart';
 
+enum ViewMode { list, map }
+
 class CarsState extends Equatable {
   final List<Car> allCars;
   final List<Car> filteredCars;
@@ -11,6 +13,9 @@ class CarsState extends Equatable {
   final Set<FuelType> selectedFuels;
   final String? selectedCarId;
   final bool isLoading;
+  final String? searchLocation;
+  final (DateTime, DateTime)? searchDates;
+  final ViewMode viewMode;
 
   const CarsState({
     this.allCars = const [],
@@ -21,6 +26,9 @@ class CarsState extends Equatable {
     this.selectedFuels = const {},
     this.selectedCarId,
     this.isLoading = false,
+    this.searchLocation,
+    this.searchDates,
+    this.viewMode = ViewMode.list,
   });
 
   CarsState copyWith({
@@ -32,7 +40,12 @@ class CarsState extends Equatable {
     Set<FuelType>? selectedFuels,
     String? selectedCarId,
     bool? isLoading,
+    String? searchLocation,
+    (DateTime, DateTime)? searchDates,
+    ViewMode? viewMode,
     bool clearSelectedCarId = false,
+    bool clearSearchLocation = false,
+    bool clearSearchDates = false,
   }) {
     return CarsState(
       allCars: allCars ?? this.allCars,
@@ -45,6 +58,12 @@ class CarsState extends Equatable {
       selectedCarId:
           clearSelectedCarId ? null : (selectedCarId ?? this.selectedCarId),
       isLoading: isLoading ?? this.isLoading,
+      searchLocation: clearSearchLocation
+          ? null
+          : (searchLocation ?? this.searchLocation),
+      searchDates:
+          clearSearchDates ? null : (searchDates ?? this.searchDates),
+      viewMode: viewMode ?? this.viewMode,
     );
   }
 
@@ -58,5 +77,8 @@ class CarsState extends Equatable {
         selectedFuels,
         selectedCarId,
         isLoading,
+        searchLocation,
+        searchDates,
+        viewMode,
       ];
 }
