@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +6,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 
-/// Modern floating bottom tab bar.
-/// - Frosted-glass white capsule, detached with margin.
-/// - Subtle light pill behind the active tab.
-/// - 4 tabs: icon + label, horizontal layout.
+/// Fixed bottom tab bar (Airbnb style).
+/// - Full-width, pinned to the bottom with a top border.
+/// - Opaque surface background (no blur, no float).
+/// - 4 tabs: icon + label.
 /// - Coral accent for active; muted grey for inactive.
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -19,6 +17,7 @@ class MainShell extends StatelessWidget {
 
   static const _tabs = [
     ('/home/explorer', LucideIcons.search, 'Recherche'),
+    ('/home/favorites', LucideIcons.heart, 'Favoris'),
     ('/home/rentals', LucideIcons.key, 'Locations'),
     ('/home/messages', LucideIcons.messageSquare, 'Messagerie'),
     ('/home/profile', LucideIcons.user, 'Compte'),
@@ -39,71 +38,32 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.ink.withValues(alpha: 0.06),
-                      blurRadius: 24,
-                      offset: const Offset(0, 10),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border(
+            top: BorderSide(color: AppColors.border),
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              children: [
+                for (int i = 0; i < _tabs.length; i++)
+                  Expanded(
+                    child: _TabButton(
+                      icon: _tabs[i].$2,
+                      label: _tabs[i].$3,
+                      active: i == currentIndex,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.go(_tabs[i].$1);
+                      },
                     ),
-                  ],
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final tabWidth = constraints.maxWidth / _tabs.length;
-                    return Stack(
-                      children: [
-                        // Subtle pill behind active tab
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 320),
-                          curve: Curves.easeOutCubic,
-                          left: tabWidth * currentIndex + 4,
-                          top: 4,
-                          bottom: 4,
-                          width: tabWidth - 8,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.background,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                          ),
-                        ),
-                        // Tab buttons
-                        Row(
-                          children: [
-                            for (int i = 0; i < _tabs.length; i++)
-                              Expanded(
-                                child: _TabButton(
-                                  icon: _tabs[i].$2,
-                                  label: _tabs[i].$3,
-                                  active: i == currentIndex,
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    context.go(_tabs[i].$1);
-                                  },
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -140,14 +100,14 @@ class _TabButton extends StatelessWidget {
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutBack,
               scale: active ? 1.05 : 0.92,
-              child: Icon(icon, size: 20, color: color),
+              child: Icon(icon, size: 24, color: color),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               label,
               style: AppTypography.body(
                 size: 11,
-                weight: active ? FontWeight.w700 : FontWeight.w500,
+                weight: active ? FontWeight.w600 : FontWeight.w500,
                 color: color,
                 letterSpacing: -0.2,
               ),

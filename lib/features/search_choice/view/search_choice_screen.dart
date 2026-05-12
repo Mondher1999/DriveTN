@@ -42,7 +42,7 @@ class SearchChoiceScreen extends StatelessWidget {
 
               // Header
               Text(
-                '— COMMENT CHERCHER ?',
+                '— PAR OÙ COMMENCER ?',
                 style: AppTypography.caps(
                   size: 10,
                   letterSpacing: 3,
@@ -60,10 +60,10 @@ class SearchChoiceScreen extends StatelessWidget {
                     letterSpacing: -1.2,
                   ),
                   children: [
-                    const TextSpan(text: 'Trouvez votre'),
+                    const TextSpan(text: 'Comment'),
                     const WidgetSpan(child: SizedBox(width: 8)),
                     TextSpan(
-                      text: 'voiture.',
+                      text: 'chercher ?',
                       style: AppTypography.display(
                         size: 34,
                         weight: FontWeight.w300,
@@ -79,7 +79,7 @@ class SearchChoiceScreen extends StatelessWidget {
                   .slideY(begin: 0.15, end: 0),
               const SizedBox(height: 8),
               Text(
-                'Deux façons de découvrir les véhicules disponibles près de vous.',
+                'Choisissez la façon qui vous convient pour trouver votre voiture idéale.',
                 style: AppTypography.body(
                   size: 14,
                   color: AppColors.textMuted,
@@ -94,14 +94,14 @@ class SearchChoiceScreen extends StatelessWidget {
               // Option 1: Simple search
               _ChoiceCard(
                 icon: LucideIcons.search,
-                title: 'Recherche simple',
+                title: 'Explorer librement',
                 subtitle:
-                    'Accédez directement à la liste et à la carte. Appliquez vos filtres en un clin d\'œil.',
-                badge: 'RAPIDE',
+                    'Parcourez la carte et la liste, filtrez selon vos envies et choisissez à votre rythme.',
+                badge: 'LIBRE',
                 delay: 300.ms,
                 onTap: () {
                   HapticFeedback.mediumImpact();
-                  context.go('/home/explorer');
+                  context.go('/discovery');
                 },
               ),
 
@@ -110,10 +110,10 @@ class SearchChoiceScreen extends StatelessWidget {
               // Option 2: Guided wizard
               _ChoiceCard(
                 icon: LucideIcons.sparkles,
-                title: 'Questions guidées',
+                title: 'Assistant voiture',
                 subtitle:
-                    'Répondez à 8 questions sur votre besoin. Nous trouvons la voiture idéale pour vous.',
-                badge: 'PERSONNALISÉ',
+                    'Répondez à quelques questions sur votre besoin. On trouve la voiture idéale pour vous.',
+                badge: 'GUIDÉ',
                 isAccent: true,
                 delay: 450.ms,
                 onTap: () {
@@ -127,7 +127,7 @@ class SearchChoiceScreen extends StatelessWidget {
               // Bottom hint
               Center(
                 child: Text(
-                  'Vous pouvez changer d\'avis à tout moment',
+                  'Vous pourrez changer à tout moment',
                   style: AppTypography.body(
                     size: 12,
                     color: AppColors.textMuted,

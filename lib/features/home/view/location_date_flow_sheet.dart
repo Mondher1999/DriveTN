@@ -60,12 +60,31 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
   final FocusNode _searchFocus = FocusNode();
   late final PageController _pageController;
 
-  static const _recentLocations = [
+  static const _popularLocations = [
+    'Aéroport Tunis-Carthage (TUN)',
+    'Aéroport Djerba-Zarzis (DJE)',
+    'Aéroport Monastir (MIR)',
+    'Aéroport Sfax (SFA)',
     'Tunis Centre',
     'La Marsa',
     'Lac 1 — Berges du Lac',
+    'Lac 2',
     'Ariana — Centre',
     'Carthage',
+    'Sidi Bou Saïd',
+    'Sfax Centre',
+    'Sousse — Kantaoui',
+    'Monastir — Skanès',
+    'Hammamet — Nord',
+    'Mahdia',
+    'Djerba — Houmt Souk',
+    'Djerba — Midoun',
+    'Djerba — Zone Touristique',
+    'Nabeul — Centre',
+    'Bizerte — Port',
+    'Gabès — Centre',
+    'Tozeur — Palmeraie',
+    'Soukra',
   ];
 
   @override
@@ -449,36 +468,34 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
             child: ListView(
               padding: const EdgeInsets.only(top: 8),
               children: [
-                _locationRow(
-                  icon: LucideIcons.navigation,
-                  iconColor: AppColors.accent,
-                  title: 'Position actuelle',
-                  subtitle: 'Utiliser le GPS',
-                  gradient: true,
-                  onTap: () => _selectLocation('Position actuelle'),
-                )
-                    .animate()
-                    .fadeIn(duration: 350.ms)
-                    .slideY(begin: 0.06, end: 0),
                 const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                const Divider(height: 1, color: AppColors.border),
+                const SizedBox(height: 12),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-                  child: Text(
-                    '— RÉCENTS',
-                    style: AppTypography.caps(
-                      size: 10,
-                      letterSpacing: 2.4,
-                      color: AppColors.textMuted,
-                    ),
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                  child: Row(
+                    children: [
+                      Container(width: 16, height: 2, decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(1))),
+                      const SizedBox(width: 8),
+                      Text(
+                        'ENDROITS POPULAIRES',
+                        style: AppTypography.caps(
+                          size: 10,
+                          letterSpacing: 1.5,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                for (int i = 0; i < _recentLocations.length; i++)
+                for (int i = 0; i < _popularLocations.length; i++)
                   _locationRow(
                     icon: LucideIcons.mapPin,
                     iconColor: AppColors.textMuted,
-                    title: _recentLocations[i],
-                    subtitle: 'Tunis, TN',
-                    onTap: () => _selectLocation(_recentLocations[i]),
+                    title: _popularLocations[i],
+                    subtitle: 'Tunisie',
+                    onTap: () => _selectLocation(_popularLocations[i]),
                   )
                       .animate()
                       .fadeIn(

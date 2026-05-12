@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -13,11 +14,11 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../bloc/cars_cubit.dart';
 import '../bloc/cars_state.dart';
-import 'car_card.dart';
-import 'category_filter_sheet.dart';
+import '../../favorites/bloc/favorites_cubit.dart';
+import '../../favorites/bloc/favorites_state.dart';
+import '../../favorites/view/favorite_car_card.dart';
 import 'filter_sheet.dart';
 import 'location_date_flow_sheet.dart';
-import 'price_filter_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,39 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Widget _filterChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: AppColors.ink),
-            const SizedBox(width: 6),
-            Text(label,
-                style: AppTypography.body(
-                    size: 12,
-                    weight: FontWeight.w700,
-                    color: AppColors.ink)),
-            const SizedBox(width: 4),
-            const Icon(LucideIcons.chevronDown,
-                size: 12, color: AppColors.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _openFilters() {
     showModalBottomSheet(
       context: context,
@@ -81,32 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => BlocProvider.value(
         value: context.read<CarsCubit>(),
         child: const FilterSheet(),
-      ),
-    );
-  }
-
-  void _openPriceFilter() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: context.read<CarsCubit>(),
-        child: const PriceFilterSheet(),
-      ),
-    );
-  }
-
-  void _openCategoryFilter() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: context.read<CarsCubit>(),
-        child: const CategoryFilterSheet(),
       ),
     );
   }
@@ -222,19 +164,30 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          TextButton(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.ink,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 8),
-            ),
-            child: Text(
-              'Trier',
-              style: AppTypography.body(
-                size: 13,
-                weight: FontWeight.w500,
-                color: AppColors.ink,
+          GestureDetector(
+            onTap: _openFilters,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.slidersHorizontal,
+                      size: 13, color: AppColors.ink),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Filtres',
+                    style: AppTypography.body(
+                      size: 12,
+                      weight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -244,10 +197,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildListView(CarsState state) {
+    final mq = MediaQuery.of(context);
+    final topSafe = mq.viewPadding.top;
+    const barHeight = 56.0; // location/date bar approx
+    const margin = 24.0;
+    const safePadding = 16.0;
+    const headerBottomPad = 16.0;
+    final topPad = topSafe + safePadding + barHeight + headerBottomPad + margin;
+
     if (state.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
-        child: Center(
+      return Padding(
+        padding: EdgeInsets.only(top: topPad),
+        child: const Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation(AppColors.ink),
           ),
@@ -256,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (state.filteredCars.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 32),
+        padding: EdgeInsets.fromLTRB(32, topPad, 32, 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -298,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return ListView.builder(
       controller: _listController,
-      padding: const EdgeInsets.fromLTRB(16, 164, 16, 100),
+      padding: EdgeInsets.fromLTRB(16, topPad, 16, 100),
       itemCount: state.filteredCars.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -307,11 +268,19 @@ class _HomeScreenState extends State<HomeScreen> {
         final car = state.filteredCars[index - 1];
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
-          child: CarCard(
-            car: car,
-            selected: car.id == state.selectedCarId,
-            index: index - 1,
-            onTap: () => context.push('/car/${car.id}'),
+          child: BlocBuilder<FavoritesCubit, FavoritesState>(
+            builder: (context, favState) {
+              return FavoriteCarCard(
+                car: car,
+                index: index - 1,
+                liked: favState.favoriteIds.contains(car.id),
+                onLikeTap: () {
+                  HapticFeedback.lightImpact();
+                  context.read<FavoritesCubit>().toggle(car.id);
+                },
+                onTap: () => context.push('/car/${car.id}'),
+              );
+            },
           ),
         );
       },
@@ -395,172 +364,196 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // Top overlay: location + dates pills, filter chips
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: AppColors.border.withValues(alpha: 0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Row 1 — Location + Dates (unified light bar)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.ink.withValues(alpha: 0.06),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                      // Header row
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Back button (only when search is active)
+                          if (state.searchLocation != null && state.searchDates != null) ...[
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                context.read<CarsCubit>().setSearchLocation(null);
+                                context.read<CarsCubit>().setSearchDates(null);
+                                context.go('/discovery');
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    LucideIcons.arrowLeft,
+                                    size: 20,
+                                    color: AppColors.ink,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                            // Location + Dates bar
+                          Expanded(
+                            child: Container(
+                              margin: (state.searchLocation != null && state.searchDates != null)
+                                  ? const EdgeInsets.symmetric(horizontal: 0)
+                                  : const EdgeInsets.symmetric(horizontal: 28),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.border),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.ink.withValues(alpha: 0.06),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () async {
+                                  final result = await LocationDateFlowSheet.show(
+                                    context,
+                                    initialLocation: state.searchLocation,
+                                    initialDates: state.searchDates,
+                                    initialStep: state.searchLocation != null ? 1 : 0,
+                                  );
+                                  if (result != null && context.mounted) {
+                                    context.read<CarsCubit>().setSearchLocation(result.location);
+                                    context.read<CarsCubit>().setSearchDates((result.start, result.end));
+                                  }
+                                },
+                                child: (state.searchLocation != null && state.searchDates != null)
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Row 1 — Location
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(LucideIcons.mapPin,
+                                                size: 14, color: AppColors.accent),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              state.searchLocation!,
+                                              style: AppTypography.body(
+                                                size: 13,
+                                                weight: FontWeight.w700,
+                                                color: AppColors.ink,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        // Row 2 — Dates
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(LucideIcons.calendarClock,
+                                                size: 13, color: AppColors.accent),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '${DateFormat('d MMM', 'fr_FR').format(state.searchDates!.$1)} — ${DateFormat('d MMM', 'fr_FR').format(state.searchDates!.$2)}',
+                                              style: AppTypography.body(
+                                                size: 12,
+                                                weight: FontWeight.w500,
+                                                color: AppColors.ink,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    )
+                                  : Center(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(LucideIcons.search,
+                                              size: 18, color: AppColors.accent),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            'Commencer ma recherche',
+                                            style: AppTypography.body(
+                                              size: 14,
+                                              weight: FontWeight.w600,
+                                              color: AppColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                              ),
+                            ),
+                          ),
+                          // Filter icon (only when search is active)
+                          if (state.searchLocation != null && state.searchDates != null) ...[
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: _openFilters,
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    LucideIcons.slidersHorizontal,
+                                    size: 20,
+                                    color: AppColors.ink,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () async {
-                            final result = await LocationDateFlowSheet.show(
-                              context,
-                              initialLocation: state.searchLocation,
-                              initialDates: state.searchDates,
-                              initialStep: state.searchLocation != null ? 1 : 0,
-                            );
-                            if (result != null && context.mounted) {
-                              context.read<CarsCubit>().setSearchLocation(result.location);
-                              context.read<CarsCubit>().setSearchDates((result.start, result.end));
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              // Location section
-                              Expanded(
-                                flex: 4,
-                                child: Row(
-                                  children: [
-                                    const Icon(LucideIcons.mapPin,
-                                        size: 18, color: AppColors.accent),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                              state.searchLocation ?? 'Où ?',
-                                              style: AppTypography.body(
-                                                  size: 13,
-                                                  weight: FontWeight.w800,
-                                                  color: state.searchLocation != null
-                                                      ? AppColors.ink
-                                                      : AppColors.textMuted),
-                                              overflow:
-                                                  TextOverflow.ellipsis),
-                                          Text(
-                                              state.searchLocation != null ? 'TN' : '',
-                                              style: AppTypography.caps(
-                                                  size: 9,
-                                                  letterSpacing: 1.4,
-                                                  color: AppColors.textMuted)),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                width: 1,
-                                height: 28,
-                                color: AppColors.borderStrong,
-                              ),
-                              const SizedBox(width: 12),
-                              // Dates section
-                              Expanded(
-                                flex: 3,
-                                child: Row(
-                                  children: [
-                                    const Icon(LucideIcons.calendarClock,
-                                        size: 18, color: AppColors.accent),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                              state.searchDates != null
-                                                  ? DateFormat('d MMM HH:mm', 'fr_FR').format(state.searchDates!.$1)
-                                                  : 'Quand ?',
-                                              style: AppTypography.body(
-                                                  size: 12,
-                                                  weight: FontWeight.w800,
-                                                  color: state.searchDates != null
-                                                      ? AppColors.ink
-                                                      : AppColors.textMuted),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1),
-                                          Text(
-                                              state.searchDates != null
-                                                  ? DateFormat('d MMM HH:mm', 'fr_FR').format(state.searchDates!.$2)
-                                                  : '',
-                                              style: AppTypography.caps(
-                                                  size: 10,
-                                                  letterSpacing: 1.4,
-                                                  color: AppColors.textMuted),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
-                      if (state.searchLocation != null && state.searchDates != null) ...[
-                        const SizedBox(height: 10),
-                        // Row 2 — Filter chips horizontal scroll
-                        SizedBox(
-                          height: 36,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            children: [
-                              _filterChip(
-                                icon: LucideIcons.dollarSign,
-                                label: 'Prix total',
-                                onTap: _openPriceFilter,
-                              ),
-                              const SizedBox(width: 8),
-                              _filterChip(
-                                icon: LucideIcons.car,
-                                label: 'Type de véhicule',
-                                onTap: _openCategoryFilter,
-                              ),
-                              const SizedBox(width: 8),
-                              _filterChip(
-                                icon: LucideIcons.slidersHorizontal,
-                                label: 'Plus de filtres',
-                                onTap: _openFilters,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ],
                   ).animate().fadeIn(
                       delay: 100.ms, duration: 500.ms),
+                    ),
+                  ),
                 ),
               ),
 
               // Toggle button
               Positioned(
-                bottom: 92,
+                bottom: MediaQuery.of(context).viewPadding.bottom + 92,
                 left: 0,
                 right: 0,
                 child: Center(

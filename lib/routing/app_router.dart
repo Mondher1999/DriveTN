@@ -6,8 +6,11 @@ import '../features/booking/view/booking_screen.dart';
 import '../features/booking/view/booking_success_screen.dart';
 import '../features/booking/view/payment_screen.dart';
 import '../features/car_detail/view/car_detail_screen.dart';
+import '../features/discovery/view/discovery_home_screen.dart';
 import '../features/eligibility/view/eligibility_screen.dart';
+import '../features/search_choice/view/search_choice_screen.dart';
 import '../features/eligibility/view/keyless_info_screen.dart';
+import '../features/favorites/view/favorites_screen.dart';
 import '../features/home/view/home_screen.dart';
 import '../features/identity/view/identity_scan_screen.dart';
 import '../features/inspection/bloc/inspection_state.dart';
@@ -20,7 +23,7 @@ import '../features/rental/view/active_rental_screen.dart';
 import '../features/rental_detail/view/rental_detail_screen.dart';
 import '../features/return/view/return_success_screen.dart';
 import '../features/shell/view/main_shell.dart';
-import '../features/search_choice/view/search_choice_screen.dart';
+
 import '../features/splash/view/splash_screen.dart';
 import '../features/unlock/view/bluetooth_lock_screen.dart';
 import '../features/unlock/view/bluetooth_unlock_screen.dart';
@@ -63,6 +66,7 @@ class AppRouter {
       GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/search-choice', builder: (_, __) => const SearchChoiceScreen()),
+      GoRoute(path: '/discovery', builder: (_, __) => const DiscoveryHomeScreen()),
       GoRoute(path: '/wizard', builder: (_, __) => const WizardScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
@@ -71,12 +75,15 @@ class AppRouter {
               path: '/home/explorer',
               builder: (_, __) => const HomeScreen()),
           GoRoute(
+              path: '/home/favorites',
+              builder: (_, __) => const FavoritesScreen()),
+          GoRoute(
               path: '/home/rentals',
               builder: (_, __) => const MyRentalsScreen()),
           GoRoute(
               path: '/home/messages',
               builder: (_, __) => const MessagesScreen()),
-GoRoute(
+          GoRoute(
               path: '/home/profile',
               builder: (_, __) => const ProfileScreen()),
         ],

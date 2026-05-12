@@ -18,6 +18,8 @@ class CarCard extends StatefulWidget {
   final VoidCallback onTap;
   final bool selected;
   final int index;
+  final bool? likedOverride;
+  final VoidCallback? onLikeTap;
 
   const CarCard({
     super.key,
@@ -25,6 +27,8 @@ class CarCard extends StatefulWidget {
     required this.onTap,
     this.selected = false,
     this.index = 0,
+    this.likedOverride,
+    this.onLikeTap,
   });
 
   @override
@@ -33,7 +37,9 @@ class CarCard extends StatefulWidget {
 
 class _CarCardState extends State<CarCard> {
   bool _pressed = false;
-  bool _liked = false;
+  bool _localLiked = false;
+
+  bool get _isLiked => widget.likedOverride ?? _localLiked;
 
   @override
   Widget build(BuildContext context) {
@@ -357,7 +363,11 @@ class _CarCardState extends State<CarCard> {
               child: GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  setState(() => _liked = !_liked);
+                  if (widget.onLikeTap != null) {
+                    widget.onLikeTap!();
+                  } else {
+                    setState(() => _localLiked = !_localLiked);
+                  }
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
@@ -376,12 +386,12 @@ class _CarCardState extends State<CarCard> {
                       ),
                       child: AnimatedScale(
                         duration: const Duration(milliseconds: 250),
-                        scale: _liked ? 1.2 : 1.0,
+                        scale: _isLiked ? 1.2 : 1.0,
                         curve: Curves.easeOutBack,
                         child: Icon(
-                          _liked ? Icons.favorite : Icons.favorite_border,
+                          _isLiked ? Icons.favorite : Icons.favorite_border,
                           size: 16,
-                          color: _liked ? AppColors.danger : AppColors.textMuted,
+                          color: _isLiked ? AppColors.danger : AppColors.textMuted,
                         ),
                       ),
                     ),
