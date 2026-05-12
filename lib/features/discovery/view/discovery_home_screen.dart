@@ -55,18 +55,25 @@ class DiscoveryHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force Peugeot 208, Toyota Yaris & Fiat 500 into Meilleures offres
+    final forcedOfferIds = {'c2', 'c7', 'c8'};
+
+    // Top choix = le top du top (mieux notées), sauf 208 & Yaris
     final topPicks = MockData.cars
-        .where((c) => c.rating >= 4.8 && c.reviewsCount > 80)
+        .where((c) => c.rating >= 4.5 && c.reviewsCount > 60 && !forcedOfferIds.contains(c.id))
         .toList();
 
     final topPickIds = topPicks.map((c) => c.id).toSet();
 
     final budgetCars = MockData.cars
-        .where((c) => c.dailyPrice < 100 && !topPickIds.contains(c.id))
+        .where((c) => c.dailyPrice < 100 && !topPickIds.contains(c.id) && !forcedOfferIds.contains(c.id))
         .toList();
 
+    // Meilleures offres = les meilleures offres + 208 & Yaris
     final offers = MockData.cars
-        .where((c) => c.rating >= 4.5 && c.dailyPrice <= 150 && !topPickIds.contains(c.id))
+        .where((c) =>
+          (c.rating >= 4.5 && c.dailyPrice <= 150 && !topPickIds.contains(c.id)) ||
+          forcedOfferIds.contains(c.id))
         .toList();
 
     return Scaffold(
@@ -123,7 +130,7 @@ class DiscoveryHomeScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: AppColors.border),
                           boxShadow: [
                             BoxShadow(
@@ -155,7 +162,7 @@ class DiscoveryHomeScreen extends StatelessWidget {
             ),
 
             // ── Expériences ──
-            _sectionTitle('Expériences', top: 24, bottom: 12, subtitle: 'Choisissez votre expérience de conduite'),
+            _sectionTitle('Expériences', top: 24, bottom: 16, subtitle: 'Choisissez votre expérience de conduite'),
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 120,
@@ -177,10 +184,15 @@ class DiscoveryHomeScreen extends StatelessWidget {
               ),
             ),
 
+            // ── Spacer between experiences and offers ──
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 16),
+            ),
+
             // ── Meilleures offres ──
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
                 child: Row(
                   children: [
                     Expanded(
@@ -423,7 +435,7 @@ class DiscoveryHomeScreen extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: SizedBox(
-                    width: 230,
+                    width: 175,
                     child: _CompactCarCard(
                       car: car,
                       liked: liked,
@@ -549,7 +561,7 @@ class _CompactCarCard extends StatelessWidget {
         children: [
           // Image with fixed height
           ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(20),
             child: SizedBox(
               height: 150,
               width: double.infinity,
