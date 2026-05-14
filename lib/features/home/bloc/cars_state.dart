@@ -15,12 +15,13 @@ class CarsState extends Equatable {
   final bool isLoading;
   final String? searchLocation;
   final (DateTime, DateTime)? searchDates;
+  final String? selectedAgencyId;
   final ViewMode viewMode;
 
   const CarsState({
     this.allCars = const [],
     this.filteredCars = const [],
-    this.priceRange = const RangeValues(0, 300),
+    this.priceRange = const RangeValues(0, 1000),
     this.selectedCategories = const {},
     this.selectedTransmissions = const {},
     this.selectedFuels = const {},
@@ -28,6 +29,7 @@ class CarsState extends Equatable {
     this.isLoading = false,
     this.searchLocation,
     this.searchDates,
+    this.selectedAgencyId,
     this.viewMode = ViewMode.list,
   });
 
@@ -42,10 +44,12 @@ class CarsState extends Equatable {
     bool? isLoading,
     String? searchLocation,
     (DateTime, DateTime)? searchDates,
-    ViewMode? viewMode,
+    String? selectedAgencyId,
     bool clearSelectedCarId = false,
     bool clearSearchLocation = false,
     bool clearSearchDates = false,
+    bool clearSelectedAgencyId = false,
+    ViewMode? viewMode,
   }) {
     return CarsState(
       allCars: allCars ?? this.allCars,
@@ -63,6 +67,9 @@ class CarsState extends Equatable {
           : (searchLocation ?? this.searchLocation),
       searchDates:
           clearSearchDates ? null : (searchDates ?? this.searchDates),
+      selectedAgencyId: clearSelectedAgencyId
+          ? null
+          : (selectedAgencyId ?? this.selectedAgencyId),
       viewMode: viewMode ?? this.viewMode,
     );
   }
@@ -79,6 +86,7 @@ class CarsState extends Equatable {
         isLoading,
         searchLocation,
         searchDates,
+        selectedAgencyId,
         viewMode,
       ];
 }

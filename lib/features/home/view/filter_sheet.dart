@@ -67,7 +67,10 @@ class _FilterSheetState extends State<FilterSheet> {
   void initState() {
     super.initState();
     final state = context.read<CarsCubit>().state;
-    _priceRange = state.priceRange;
+    // Clamp price range to the slider bounds to avoid assertion errors.
+    final start = state.priceRange.start.clamp(0.0, 1000.0);
+    final end = state.priceRange.end.clamp(start, 1000.0);
+    _priceRange = RangeValues(start, end);
     _categories = {...state.selectedCategories};
     _transmissions = {...state.selectedTransmissions};
     _fuels = {...state.selectedFuels};
@@ -76,6 +79,35 @@ class _FilterSheetState extends State<FilterSheet> {
   }
 
   // ---------------- Helpers ----------------
+
+  String _categoryLabel(CarCategory c) {
+    switch (c) {
+      case CarCategory.city:
+        return 'Citadine';
+      case CarCategory.sedan:
+        return 'Berline';
+      case CarCategory.suv:
+        return 'SUV';
+      case CarCategory.utility:
+        return 'Utilitaire';
+      case CarCategory.electric:
+        return 'Électrique';
+      case CarCategory.family:
+        return 'Familiale';
+      case CarCategory.minibus:
+        return 'Minibus';
+      case CarCategory.fourByFour:
+        return '4x4';
+      case CarCategory.convertible:
+        return 'Cabriolet';
+      case CarCategory.coupe:
+        return 'Coupé';
+      case CarCategory.collection:
+        return 'Collection';
+      case CarCategory.camperVan:
+        return 'Van aménagé';
+    }
+  }
 
   String _fuelLabel(FuelType f) {
     switch (f) {
@@ -99,6 +131,10 @@ class _FilterSheetState extends State<FilterSheet> {
     final mq = MediaQuery.of(context);
     final sections = <Widget>[
       _placesSection(),
+      _divider(),
+      _categorySection(),
+      _divider(),
+      _priceSection(),
       _divider(),
       _recentToggleSection(),
       _divider(),
@@ -245,6 +281,82 @@ class _FilterSheetState extends State<FilterSheet> {
                   : null,
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _categorySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader('Type de véhicule'),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final c in CarCategory.values)
+              _SelectableChip(
+                label: _categoryLabel(c),
+                selected: _categories.contains(c),
+                onTap: () {
+                  _haptic();
+                  setState(() {
+                    if (_categories.contains(c)) {
+                      _categories.remove(c);
+                    } else {
+                      _categories.add(c);
+                    }
+                  });
+                },
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _priceSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader('Prix par jour'),
+        Row(
+          children: [
+            Text(
+              '${_priceRange.start.toInt()} DT',
+              style: AppTypography.body(
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${_priceRange.end.toInt()} DT',
+              style: AppTypography.body(
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        RangeSlider(
+          values: _priceRange,
+          min: 0,
+          max: 1000,
+          divisions: 100,
+          activeColor: AppColors.accent,
+          inactiveColor: AppColors.border,
+          labels: RangeLabels(
+            '${_priceRange.start.toInt()} DT',
+            '${_priceRange.end.toInt()} DT',
+          ),
+          onChanged: (values) {
+            setState(() => _priceRange = values);
+          },
         ),
       ],
     );

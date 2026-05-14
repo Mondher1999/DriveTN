@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -12,6 +13,9 @@ import '../../../shared/widgets/price_tag.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
+import '../../booking/bloc/booking_cubit.dart';
+import '../../home/bloc/cars_cubit.dart';
+import '../../home/view/location_date_flow_sheet.dart';
 
 /// Car detail screen — Sunset Tunisia light theme.
 /// Structure adapted from Getaround mockups (dark) into our parchment palette.
@@ -754,6 +758,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
 
   Widget _gridItem(IconData icon, String label) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 18, color: AppColors.ink),
         const SizedBox(width: 10),
@@ -774,7 +779,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
 
   Widget _subHeader(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 2),
       child: Text(
         text,
         style: AppTypography.h2(size: 14, weight: FontWeight.w700),
@@ -803,14 +808,14 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 44),
           _subHeader('Caractéristiques techniques'),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 4,
-            mainAxisSpacing: 8,
+            childAspectRatio: 8.0,
+            mainAxisSpacing: 14,
             crossAxisSpacing: 12,
             children: [
               _gridItem(LucideIcons.cog, car.transmissionLabel),
@@ -819,14 +824,14 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
               _gridItem(LucideIcons.calendar, 'Année ${car.year}'),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           _subHeader('Équipements et options'),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 4,
-            mainAxisSpacing: 8,
+            childAspectRatio: 8.0,
+            mainAxisSpacing: 14,
             crossAxisSpacing: 12,
             children: [
               _gridItem(LucideIcons.bluetooth, 'Audio Bluetooth'),
@@ -1425,8 +1430,31 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                 label: 'Réserver',
                 icon: LucideIcons.zap,
                 variant: ButtonVariant.gradient,
-                onPressed: () =>
-                    context.push('/booking/${car.id}/eligibility'),
+                onPressed: () async {
+                  final carsState = context.read<CarsCubit>().state;
+                  final result = await LocationDateFlowSheet.show(
+                    context,
+                    initialLocation: carsState.searchLocation,
+                    initialDates: carsState.searchDates,
+                    initialStep: carsState.searchLocation != null && carsState.searchDates != null ? 1 : 0,
+                  );
+                  if (result == null) return;
+                  if (!mounted) return;
+                  // Save to cars cubit for future reference
+                  context.read<CarsCubit>().setSearchLocation(result.location);
+                  context.read<CarsCubit>().setSearchDates((result.start, result.end));
+                  if (!mounted) return;
+                  // Init booking cubit with selected dates & location
+                  context.read<BookingCubit>().initForCarWithDates(
+                    car,
+                    result.start,
+                    result.end,
+                    result.location,
+                  );
+                  if (!mounted) return;
+                  // Show availability verification screen
+                  context.push('/booking/${car.id}/verify');
+                },
               ),
             ),
           ],

@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/view/login_screen.dart';
+import '../features/booking/view/agency_validation_screen.dart';
+import '../features/booking/view/availability_verify_screen.dart';
+import '../features/booking/view/endless_drive_game.dart';
 import '../features/booking/view/booking_screen.dart';
 import '../features/booking/view/booking_success_screen.dart';
+import '../features/booking/view/game_leaderboard_screen.dart';
 import '../features/booking/view/payment_screen.dart';
 import '../features/car_detail/view/car_detail_screen.dart';
 import '../features/discovery/view/discovery_home_screen.dart';
@@ -66,11 +70,13 @@ class AppRouter {
       GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/search-choice', builder: (_, __) => const SearchChoiceScreen()),
-      GoRoute(path: '/discovery', builder: (_, __) => const DiscoveryHomeScreen()),
       GoRoute(path: '/wizard', builder: (_, __) => const WizardScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
+          GoRoute(
+              path: '/discovery',
+              builder: (_, __) => const DiscoveryHomeScreen()),
           GoRoute(
               path: '/home/explorer',
               builder: (_, __) => const HomeScreen()),
@@ -107,6 +113,14 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/booking/:carId/verify',
+        pageBuilder: (_, s) => _slideFadePage(
+          key: s.pageKey,
+          state: s,
+          child: AvailabilityVerifyScreen(carId: s.pathParameters['carId']!),
+        ),
+      ),
+      GoRoute(
         path: '/booking/:carId/eligibility',
         pageBuilder: (_, s) => _slideFadePage(
           key: s.pageKey,
@@ -136,6 +150,22 @@ class AppRouter {
           key: s.pageKey,
           state: s,
           child: IdentityScanScreen(carId: s.pathParameters['carId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/booking/:carId/agency-validation',
+        pageBuilder: (_, s) => _slideFadePage(
+          key: s.pageKey,
+          state: s,
+          child: AgencyValidationScreen(carId: s.pathParameters['carId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/booking/:carId/game',
+        pageBuilder: (_, s) => _slideFadePage(
+          key: s.pageKey,
+          state: s,
+          child: EndlessDriveGame(carId: s.pathParameters['carId']!),
         ),
       ),
       GoRoute(
@@ -210,6 +240,14 @@ class AppRouter {
           state: s,
           child: RentalDetailScreen(
               bookingId: s.pathParameters['bookingId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/game-leaderboard',
+        pageBuilder: (_, s) => _slideFadePage(
+          key: s.pageKey,
+          state: s,
+          child: const GameLeaderboardScreen(),
         ),
       ),
       GoRoute(

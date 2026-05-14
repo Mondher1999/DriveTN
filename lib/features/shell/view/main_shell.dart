@@ -16,7 +16,7 @@ class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.child});
 
   static const _tabs = [
-    ('/home/explorer', LucideIcons.search, 'Recherche'),
+    ('/discovery', LucideIcons.search, 'Recherche'),
     ('/home/favorites', LucideIcons.heart, 'Favoris'),
     ('/home/rentals', LucideIcons.key, 'Locations'),
     ('/home/messages', LucideIcons.messageSquare, 'Messagerie'),
@@ -24,6 +24,7 @@ class MainShell extends StatelessWidget {
   ];
 
   int _indexOfLocation(String location) {
+    if (location == '/discovery' || location.startsWith('/home/explorer')) return 0;
     for (int i = 0; i < _tabs.length; i++) {
       if (location.startsWith(_tabs[i].$1)) return i;
     }

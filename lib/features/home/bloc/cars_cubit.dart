@@ -81,6 +81,18 @@ class CarsCubit extends Cubit<CarsState> {
       selectedCarId: state.selectedCarId,
       isLoading: state.isLoading,
       viewMode: state.viewMode,
+      searchLocation: state.searchLocation,
+      searchDates: state.searchDates,
     ));
+  }
+
+  void filterByMinRating(double minRating) {
+    final filtered = state.allCars.where((c) => c.rating >= minRating).toList();
+    emit(state.copyWith(filteredCars: filtered));
+  }
+
+  void filterByAgency(String agencyId) {
+    final filtered = state.allCars.where((c) => c.agencyId == agencyId).toList();
+    emit(state.copyWith(filteredCars: filtered, selectedAgencyId: agencyId));
   }
 }

@@ -16,6 +16,15 @@ class BookingCubit extends Cubit<BookingState> {
     ));
   }
 
+  void initForCarWithDates(Car car, DateTime start, DateTime end, String location) {
+    emit(BookingState(
+      car: car,
+      startDate: start,
+      endDate: end,
+      pickupLocation: location,
+    ));
+  }
+
   void setStartDate(DateTime d) {
     DateTime end = state.endDate;
     if (!end.isAfter(d)) end = d.add(const Duration(days: 1));
@@ -33,6 +42,10 @@ class BookingCubit extends Cubit<BookingState> {
   void toggleBabySeat(bool v) => emit(state.copyWith(babySeat: v));
   void toggleUnlimitedKm(bool v) => emit(state.copyWith(unlimitedKm: v));
 
+  void applyGameBonus(int coins) {
+    emit(state.copyWith(gameBonusCoins: coins));
+  }
+
   Future<Booking> confirmBooking() async {
     if (state.car == null) {
       return Future.error(StateError('No car selected'));
@@ -45,7 +58,7 @@ class BookingCubit extends Cubit<BookingState> {
       userId: 'user1',
       startDate: state.startDate,
       endDate: state.endDate,
-      totalPrice: state.total,
+      totalPrice: state.discountedTotal,
       depositAmount: state.car!.depositAmount,
       status: BookingStatus.confirmed,
       additionalDriver: state.additionalDriver,

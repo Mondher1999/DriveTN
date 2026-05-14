@@ -6,21 +6,25 @@ class BookingState extends Equatable {
   final Car? car;
   final DateTime startDate;
   final DateTime endDate;
+  final String? pickupLocation;
   final bool additionalDriver;
   final bool babySeat;
   final bool unlimitedKm;
   final bool isProcessing;
   final Booking? confirmedBooking;
+  final int gameBonusCoins;
 
   BookingState({
     this.car,
     DateTime? startDate,
     DateTime? endDate,
+    this.pickupLocation,
     this.additionalDriver = false,
     this.babySeat = false,
     this.unlimitedKm = false,
     this.isProcessing = false,
     this.confirmedBooking,
+    this.gameBonusCoins = 0,
   })  : startDate = startDate ?? DateTime.now(),
         endDate = endDate ?? DateTime.now().add(const Duration(days: 1));
 
@@ -42,25 +46,32 @@ class BookingState extends Equatable {
     return (car!.dailyPrice + extrasPerDay) * durationDays;
   }
 
+  double get discountedTotal =>
+      (total - gameBonusCoins).clamp(0.0, double.infinity);
+
   BookingState copyWith({
     Car? car,
     DateTime? startDate,
     DateTime? endDate,
+    String? pickupLocation,
     bool? additionalDriver,
     bool? babySeat,
     bool? unlimitedKm,
     bool? isProcessing,
     Booking? confirmedBooking,
+    int? gameBonusCoins,
   }) {
     return BookingState(
       car: car ?? this.car,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      pickupLocation: pickupLocation ?? this.pickupLocation,
       additionalDriver: additionalDriver ?? this.additionalDriver,
       babySeat: babySeat ?? this.babySeat,
       unlimitedKm: unlimitedKm ?? this.unlimitedKm,
       isProcessing: isProcessing ?? this.isProcessing,
       confirmedBooking: confirmedBooking ?? this.confirmedBooking,
+      gameBonusCoins: gameBonusCoins ?? this.gameBonusCoins,
     );
   }
 
@@ -69,10 +80,12 @@ class BookingState extends Equatable {
         car,
         startDate,
         endDate,
+        pickupLocation,
         additionalDriver,
         babySeat,
         unlimitedKm,
         isProcessing,
         confirmedBooking,
+        gameBonusCoins,
       ];
 }

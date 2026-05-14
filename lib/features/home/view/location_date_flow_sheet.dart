@@ -809,19 +809,34 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
               .fadeIn(duration: 350.ms, delay: 150.ms)
               .slideY(begin: 0.06, end: 0, delay: 150.ms),
           const SizedBox(height: 16),
-          // CTA
-          PrimaryButton(
-            label: 'Rechercher pour $_durationLabel',
-            icon: LucideIcons.search,
-            variant: ButtonVariant.gradient,
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).pop((
-                location: _selectedLocation!,
-                start: _start,
-                end: _end,
-              ));
-            },
+          // CTA: switch to Fin tab when on Début, then search.
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            child: _activeTab == 0
+                ? PrimaryButton(
+                    key: const ValueKey('continue_btn'),
+                    label: 'Choisir la date de fin',
+                    icon: LucideIcons.calendarDays,
+                    variant: ButtonVariant.gradient,
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      setState(() => _activeTab = 1);
+                    },
+                  )
+                : PrimaryButton(
+                    key: const ValueKey('search_btn'),
+                    label: 'Rechercher pour $_durationLabel',
+                    icon: LucideIcons.search,
+                    variant: ButtonVariant.gradient,
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.of(context).pop((
+                        location: _selectedLocation!,
+                        start: _start,
+                        end: _end,
+                      ));
+                    },
+                  ),
           )
               .animate()
               .fadeIn(duration: 350.ms, delay: 200.ms)
@@ -835,8 +850,12 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
   Widget _dateTab(int index, String label, DateTime date,
       DateFormat fmt, DateFormat fmtTime) {
     final isActive = _activeTab == index;
+    final needsAttention = index == 1 && _activeTab == 0;
     return GestureDetector(
-      onTap: () => setState(() => _activeTab = index),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() => _activeTab = index);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
@@ -861,8 +880,12 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
                 ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isActive ? Colors.transparent : AppColors.border,
-            width: isActive ? 0 : 1,
+            color: isActive
+                ? Colors.transparent
+                : needsAttention
+                    ? AppColors.accent.withValues(alpha: 0.5)
+                    : AppColors.border,
+            width: isActive ? 0 : (needsAttention ? 1.5 : 1),
           ),
           boxShadow: isActive
               ? [
@@ -872,26 +895,64 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
                     offset: const Offset(0, 6),
                   ),
                 ]
-              : [
-                  BoxShadow(
-                    color: AppColors.ink.withValues(alpha: 0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+              : needsAttention
+                  ? [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: AppColors.ink.withValues(alpha: 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: AppTypography.caps(
-                size: 9,
-                letterSpacing: 1.6,
-                color: isActive
-                    ? AppColors.surface.withValues(alpha: 0.9)
-                    : AppColors.textMuted,
-              ),
+            Row(
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.caps(
+                    size: 9,
+                    letterSpacing: 1.6,
+                    color: isActive
+                        ? AppColors.surface.withValues(alpha: 0.9)
+                        : needsAttention
+                            ? AppColors.accent
+                            : AppColors.textMuted,
+                  ),
+                ),
+                if (needsAttention) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accent.withValues(alpha: 0.5),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(0.6, 0.6),
+                        end: const Offset(1.2, 1.2),
+                        duration: 800.ms,
+                        curve: Curves.easeInOut,
+                      ),
+                ],
+              ],
             ),
             const SizedBox(height: 3),
             Text(

@@ -24,15 +24,19 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   int _step = 0;
-  static const _totalSteps = 3;
+  static const _totalSteps = 2; // 0 = extras, 1 = recap (dates removed)
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final car = MockData.carById(widget.carId);
-      if (car != null) {
-        context.read<BookingCubit>().initForCar(car);
+      final cubit = context.read<BookingCubit>();
+      // Only init if not already pre-initialized from car detail flow
+      if (cubit.state.car == null) {
+        final car = MockData.carById(widget.carId);
+        if (car != null) {
+          cubit.initForCar(car);
+        }
       }
     });
   }
@@ -40,11 +44,9 @@ class _BookingScreenState extends State<BookingScreen> {
   bool _canAdvance(BookingState state) {
     switch (_step) {
       case 0:
-        return state.endDate.isAfter(state.startDate);
+        return true; // extras — always can advance
       case 1:
-        return true;
-      case 2:
-        return true;
+        return true; // recap
       default:
         return true;
     }
@@ -179,238 +181,15 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget _stepContent(BuildContext context, BookingState state) {
     switch (_step) {
       case 0:
-        return _stepDates(context, state);
-      case 1:
         return _stepExtras(context, state);
-      case 2:
+      case 1:
         return _stepRecap(context, state);
       default:
-        return _stepDates(context, state);
+        return _stepExtras(context, state);
     }
   }
 
-  // --- Step 1: Dates ---
-  Widget _stepDates(BuildContext context, BookingState state) {
-    final fmt = DateFormat('d MMM yyyy', 'fr_FR');
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '— ÉTAPE 1 / 3',
-            style: AppTypography.caps(
-              size: 10,
-              letterSpacing: 3,
-              color: AppColors.accent,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                'Quand',
-                style: AppTypography.display(
-                  size: 36,
-                  weight: FontWeight.w900,
-                  letterSpacing: -1.4,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'partez-vous ?',
-                style: AppTypography.display(
-                  size: 36,
-                  weight: FontWeight.w300,
-                  italic: true,
-                  letterSpacing: -1.4,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Choisissez votre période de location.',
-            style: AppTypography.body(size: 13, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 24),
-          _datePickerCard(
-            label: 'DÉBUT',
-            date: state.startDate,
-            formatted: fmt.format(state.startDate),
-            icon: LucideIcons.calendar,
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: state.startDate,
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 90)),
-                locale: const Locale('fr', 'FR'),
-                builder: (c, child) => Theme(
-                  data: Theme.of(c).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: AppColors.accent,
-                      onPrimary: AppColors.surface,
-                      onSurface: AppColors.ink,
-                    ),
-                  ),
-                  child: child!,
-                ),
-              );
-              if (picked != null && context.mounted) {
-                context.read<BookingCubit>().setStartDate(picked);
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          _datePickerCard(
-            label: 'FIN',
-            date: state.endDate,
-            formatted: fmt.format(state.endDate),
-            icon: LucideIcons.calendarDays,
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: state.endDate,
-                firstDate: state.startDate.add(const Duration(days: 1)),
-                lastDate: state.startDate.add(const Duration(days: 90)),
-                locale: const Locale('fr', 'FR'),
-                builder: (c, child) => Theme(
-                  data: Theme.of(c).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: AppColors.accent,
-                      onPrimary: AppColors.surface,
-                      onSurface: AppColors.ink,
-                    ),
-                  ),
-                  child: child!,
-                ),
-              );
-              if (picked != null && context.mounted) {
-                context.read<BookingCubit>().setEndDate(picked);
-              }
-            },
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.softWarm,
-                  AppColors.softWarm.withValues(alpha: 0.4),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.18)),
-            ),
-            child: Row(
-              children: [
-                const Icon(LucideIcons.clock,
-                    size: 16, color: AppColors.accent),
-                const SizedBox(width: 8),
-                Text(
-                  'DURÉE',
-                  style: AppTypography.caps(
-                    size: 10,
-                    letterSpacing: 1.6,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const Spacer(),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '${state.durationDays}',
-                      style: AppTypography.numeric(
-                        size: 22,
-                        weight: FontWeight.w900,
-                        color: AppColors.accent,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      state.durationDays > 1 ? 'jours' : 'jour',
-                      style: AppTypography.caps(
-                        size: 10,
-                        letterSpacing: 1.2,
-                        color: AppColors.accent,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _datePickerCard({
-    required String label,
-    required DateTime date,
-    required String formatted,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.softWarm,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, size: 22, color: AppColors.accent),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: AppTypography.caps(
-                      size: 9,
-                      letterSpacing: 1.6,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    formatted,
-                    style: AppTypography.h2(size: 17, weight: FontWeight.w800),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(LucideIcons.chevronRight,
-                size: 18, color: AppColors.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- Step 2: Extras ---
+  // --- Step 1: Extras ---
   Widget _stepExtras(BuildContext context, BookingState state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
@@ -418,7 +197,7 @@ class _BookingScreenState extends State<BookingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '— ÉTAPE 2 / 3',
+            '— ÉTAPE 1 / 2',
             style: AppTypography.caps(
               size: 10,
               letterSpacing: 3,
@@ -630,7 +409,7 @@ class _BookingScreenState extends State<BookingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '— ÉTAPE 3 / 3',
+            '— ÉTAPE 2 / 2',
             style: AppTypography.caps(
               size: 10,
               letterSpacing: 3,

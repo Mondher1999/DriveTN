@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'features/booking/bloc/booking_cubit.dart';
+import 'features/booking/bloc/game_cubit.dart';
 import 'features/favorites/bloc/favorites_cubit.dart';
 import 'features/home/bloc/cars_cubit.dart';
 import 'features/inspection/bloc/inspection_cubit.dart';
@@ -22,6 +23,7 @@ class DriveTNApp extends StatelessWidget {
         BlocProvider(create: (_) => CarsCubit()),
         BlocProvider(create: (_) => FavoritesCubit()),
         BlocProvider(create: (_) => BookingCubit()),
+        BlocProvider(create: (_) => GameCubit()),
         BlocProvider(create: (_) => InspectionCubit()),
         BlocProvider(create: (_) => MessagesCubit()),
         BlocProvider(create: (_) => RentalCubit()),

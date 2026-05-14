@@ -13,12 +13,16 @@ import '../../../theme/app_typography.dart';
 /// - Image is a standalone rounded rectangle (not clipped inside a card).
 /// - Clean text below, no visible white card container.
 /// - Subtle, spacious, premium feel matching DriveTN palette.
+///
+/// When [compact] is true, renders a small grid-friendly card (2-col layout).
 class FavoriteCarCard extends StatefulWidget {
   final Car car;
   final VoidCallback onTap;
   final bool liked;
   final VoidCallback onLikeTap;
   final int index;
+  final bool compact;
+  final DateTime? likedDate;
 
   const FavoriteCarCard({
     super.key,
@@ -27,6 +31,8 @@ class FavoriteCarCard extends StatefulWidget {
     required this.liked,
     required this.onLikeTap,
     this.index = 0,
+    this.compact = false,
+    this.likedDate,
   });
 
   @override
@@ -36,8 +42,253 @@ class FavoriteCarCard extends StatefulWidget {
 class _FavoriteCarCardState extends State<FavoriteCarCard> {
   bool _pressed = false;
 
+  String get _categoryLabel {
+    switch (widget.car.category) {
+      case CarCategory.city:
+        return 'Citadine';
+      case CarCategory.sedan:
+        return 'Berline';
+      case CarCategory.suv:
+        return 'SUV';
+      case CarCategory.utility:
+        return 'Utilitaire';
+      case CarCategory.electric:
+        return 'Électrique';
+      case CarCategory.family:
+        return 'Familiale';
+      case CarCategory.minibus:
+        return 'Minibus';
+      case CarCategory.fourByFour:
+        return '4x4';
+      case CarCategory.convertible:
+        return 'Cabriolet';
+      case CarCategory.coupe:
+        return 'Coupé';
+      case CarCategory.collection:
+        return 'Collection';
+      case CarCategory.camperVan:
+        return 'Camping-car';
+    }
+  }
+
+  String get _transmissionLabel {
+    switch (widget.car.transmission) {
+      case Transmission.manual:
+        return 'Manuelle';
+      case Transmission.automatic:
+        return 'Auto';
+    }
+  }
+
+  String _agencyName(String agencyId) {
+    return MockData.agencies
+        .firstWhere(
+          (a) => a.id == agencyId,
+          orElse: () => MockData.agencies.first,
+        )
+        .name;
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.compact) {
+      return _buildCompact(context);
+    }
+    return _buildFull(context);
+  }
+
+  Widget _buildCompact(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 180),
+        scale: _pressed ? 0.97 : 1.0,
+        curve: Curves.easeOutCubic,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Photo block ──
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                height: 132,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFFE4D6), Color(0xFFFFF1B8)],
+                        ),
+                      ),
+                    ),
+                    CachedNetworkImage(
+                      imageUrl: widget.car.photoUrls.first,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const SizedBox.shrink(),
+                      errorWidget: (_, __, ___) => const Center(
+                        child: Icon(LucideIcons.car,
+                            size: 32, color: AppColors.textMuted),
+                      ),
+                    ),
+                    // Top-right heart
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          widget.onLikeTap();
+                        },
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 250),
+                          scale: widget.liked ? 1.15 : 1.0,
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            widget.liked
+                                ? LucideIcons.heart
+                                : LucideIcons.heart,
+                            size: 22,
+                            color: widget.liked
+                                ? AppColors.danger
+                                : AppColors.surface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Category chip on image
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _categoryLabel,
+                          style: AppTypography.caps(
+                            size: 9,
+                            letterSpacing: 0.8,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            // ── Text content ──
+            Text(
+              '${widget.car.brand} ${widget.car.model}',
+              style: AppTypography.body(
+                size: 14,
+                weight: FontWeight.w800,
+                color: AppColors.ink,
+                height: 1.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+            const SizedBox(height: 1),
+            // Agency
+            Text(
+              _agencyName(widget.car.agencyId),
+              style: AppTypography.body(
+                size: 11,
+                weight: FontWeight.w500,
+                color: AppColors.textMuted,
+                height: 1.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+            const SizedBox(height: 2),
+            // Row: rating + specs
+            // Après — Row qui reste sur une ligne
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.star_rounded,
+                    size: 13, color: AppColors.warning),
+                const SizedBox(width: 2),
+                Text(
+                  widget.car.rating.toStringAsFixed(1),
+                  style: AppTypography.body(
+                      size: 12, weight: FontWeight.w700, color: AppColors.ink),
+                ),
+                Text(
+                  ' (${widget.car.reviewsCount})',
+                  style:
+                      AppTypography.body(size: 11, color: AppColors.textMuted),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                    width: 3,
+                    height: 3,
+                    decoration: const BoxDecoration(
+                        color: AppColors.borderStrong, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                const Icon(LucideIcons.users,
+                    size: 11, color: AppColors.textMuted),
+                const SizedBox(width: 2),
+                Text('${widget.car.seats}',
+                    style: AppTypography.body(
+                        size: 11, color: AppColors.textMuted)),
+                const SizedBox(width: 6),
+                Container(
+                    width: 3,
+                    height: 3,
+                    decoration: const BoxDecoration(
+                        color: AppColors.borderStrong, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Text(_transmissionLabel,
+                    style: AppTypography.body(
+                        size: 11, color: AppColors.textMuted)),
+              ],
+            ),
+            const SizedBox(height: 2),
+            // Price
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${widget.car.dailyPrice.toInt()} DT',
+                  style: AppTypography.numeric(
+                    size: 15,
+                    weight: FontWeight.w900,
+                    color: AppColors.accent,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  '/jour',
+                  style: AppTypography.body(
+                      size: 11, color: AppColors.textMuted, height: 1.2),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 300.ms, delay: (40 * widget.index).ms).slideY(
+        begin: 0.1, end: 0, duration: 300.ms, delay: (40 * widget.index).ms);
+  }
+
+  Widget _buildFull(BuildContext context) {
     final agency = MockData.agencyById(widget.car.agencyId);
 
     return GestureDetector(
@@ -255,10 +506,8 @@ class _FavoriteCarCardState extends State<FavoriteCarCard> {
           ],
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, delay: (50 * widget.index).ms)
-        .slideY(begin: 0.15, end: 0, duration: 400.ms, delay: (50 * widget.index).ms);
+    ).animate().fadeIn(duration: 400.ms, delay: (50 * widget.index).ms).slideY(
+        begin: 0.15, end: 0, duration: 400.ms, delay: (50 * widget.index).ms);
   }
 
   Widget _chip(IconData icon, String text) {

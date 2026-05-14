@@ -110,9 +110,9 @@ class SearchChoiceScreen extends StatelessWidget {
               // Option 2: Guided wizard
               _ChoiceCard(
                 icon: LucideIcons.sparkles,
-                title: 'Assistant voiture',
+                title: 'Trouver ma voiture',
                 subtitle:
-                    'Répondez à quelques questions sur votre besoin. On trouve la voiture idéale pour vous.',
+                    'Dites-nous vos dates, votre budget et votre style. Notre algorithme trouve votre voiture idéale en 30 secondes chrono.',
                 badge: 'GUIDÉ',
                 isAccent: true,
                 delay: 450.ms,

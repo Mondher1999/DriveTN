@@ -18,7 +18,17 @@ class WizardCubit extends Cubit<WizardState> {
       emit(state.copyWith(endDate: d));
     }
   }
-  void setBudget(RangeValues v) => emit(state.copyWith(budget: v));
+  void setStartTab(bool v) => emit(state.copyWith(isStartTab: v));
+  void setBudget(RangeValues v) {
+    final start = v.start.clamp(50.0, 1000.0);
+    final end = v.end.clamp(50.0, 1000.0);
+    emit(state.copyWith(
+      budget: RangeValues(
+        start <= end ? start : end,
+        start <= end ? end : start,
+      ),
+    ));
+  }
   void setFuel(WizardFuel v) => emit(state.copyWith(fuel: v));
   void setSeats(WizardSeats v) => emit(state.copyWith(seats: v));
   void setTransmission(WizardTransmission v) =>

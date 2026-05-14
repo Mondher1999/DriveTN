@@ -39,6 +39,7 @@ class WizardState extends Equatable {
   final WizardCarType? carType;
   final DateTime? startDate;
   final DateTime? endDate;
+  final bool isStartTab;
   final RangeValues budget;
   final WizardFuel? fuel;
   final WizardSeats? seats;
@@ -51,7 +52,8 @@ class WizardState extends Equatable {
     this.carType,
     this.startDate,
     this.endDate,
-    this.budget = const RangeValues(80, 500),
+    this.isStartTab = true,
+    this.budget = const RangeValues(50, 1000),
     this.fuel,
     this.seats,
     this.transmission,
@@ -85,6 +87,7 @@ class WizardState extends Equatable {
     WizardCarType? carType,
     DateTime? startDate,
     DateTime? endDate,
+    bool? isStartTab,
     RangeValues? budget,
     WizardFuel? fuel,
     WizardSeats? seats,
@@ -97,6 +100,7 @@ class WizardState extends Equatable {
       carType: carType ?? this.carType,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      isStartTab: isStartTab ?? this.isStartTab,
       budget: budget ?? this.budget,
       fuel: fuel ?? this.fuel,
       seats: seats ?? this.seats,
@@ -121,7 +125,7 @@ class WizardState extends Equatable {
       case WizardUseCase.business: return {CarCategory.sedan, CarCategory.city};
       case WizardUseCase.tourism: return {CarCategory.suv, CarCategory.convertible, CarCategory.fourByFour};
       case WizardUseCase.event: return {CarCategory.sedan, CarCategory.coupe, CarCategory.convertible};
-      case WizardUseCase.longTerm: return const {}; // no category filter
+      case WizardUseCase.longTerm: return const {};
     }
   }
 
@@ -163,5 +167,5 @@ class WizardState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [step, useCase, carType, startDate, endDate, budget, fuel, seats, transmission, pickup];
+  List<Object?> get props => [step, useCase, carType, startDate, endDate, isStartTab, budget, fuel, seats, transmission, pickup];
 }

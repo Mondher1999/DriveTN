@@ -220,7 +220,7 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
           ),
           const Spacer(),
           GestureDetector(
-            onTap: () => context.go('/booking/${widget.carId}/payment'),
+            onTap: () => context.go('/booking/${widget.carId}/agency-validation'),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               child: Text(
@@ -741,7 +741,7 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
         onPressed: _isComplete
             ? () {
                 HapticFeedback.lightImpact();
-                context.go('/booking/${widget.carId}/payment');
+                context.go('/booking/${widget.carId}/agency-validation');
               }
             : null,
       ),

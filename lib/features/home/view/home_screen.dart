@@ -390,40 +390,40 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Back button (only when search is active)
-                          if (state.searchLocation != null && state.searchDates != null) ...[
-                            GestureDetector(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                context.read<CarsCubit>().setSearchLocation(null);
-                                context.read<CarsCubit>().setSearchDates(null);
-                                context.go('/discovery');
-                              },
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    LucideIcons.arrowLeft,
-                                    size: 20,
-                                    color: AppColors.ink,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                          ],
-                            // Location + Dates bar
-                          Expanded(
-                            child: Container(
-                              margin: (state.searchLocation != null && state.searchDates != null)
-                                  ? const EdgeInsets.symmetric(horizontal: 0)
-                                  : const EdgeInsets.symmetric(horizontal: 28),
+                           // Back button (only when search is active) with small left margin
+                           if (state.searchLocation != null && state.searchDates != null) ...[
+                             GestureDetector(
+                               onTap: () {
+                                 HapticFeedback.lightImpact();
+                                 context.read<CarsCubit>().setSearchLocation(null);
+                                 context.read<CarsCubit>().setSearchDates(null);
+                                 context.go('/discovery');
+                               },
+                               child: Container(
+                                 margin: const EdgeInsets.only(left: 2),
+                                 width: 40,
+                                 height: 40,
+                                 decoration: BoxDecoration(
+                                   color: AppColors.surface,
+                                   borderRadius: BorderRadius.circular(12),
+                                   border: Border.all(color: AppColors.border),
+                                 ),
+                                 child: const Center(
+                                   child: Icon(
+                                     LucideIcons.arrowLeft,
+                                     size: 20,
+                                     color: AppColors.ink,
+                                   ),
+                                 ),
+                               ),
+                             ),
+                             const SizedBox(width: 10),
+                           ],
+                             // Location + Dates bar (centered, wider)
+                           Expanded(
+                             child: Center(
+                               child: Container(
+                                 constraints: const BoxConstraints(minWidth: 300, maxWidth: 320),
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(16),
@@ -515,31 +515,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ],
                                       ),
                                     ),
-                              ),
-                            ),
-                          ),
-                          // Filter icon (only when search is active)
+                               ),
+                             ),
+                           ),
+                         ),
+                           // Filter icon (only when search is active)
                           if (state.searchLocation != null && state.searchDates != null) ...[
                             const SizedBox(width: 10),
-                            GestureDetector(
-                              onTap: _openFilters,
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    LucideIcons.slidersHorizontal,
-                                    size: 20,
-                                    color: AppColors.ink,
-                                  ),
-                                ),
-                              ),
-                            ),
+                             GestureDetector(
+                               onTap: _openFilters,
+                               child: Container(
+                                 margin: const EdgeInsets.only(right: 2),
+                                 width: 40,
+                                 height: 40,
+                                 decoration: BoxDecoration(
+                                   color: AppColors.surface,
+                                   borderRadius: BorderRadius.circular(12),
+                                   border: Border.all(color: AppColors.border),
+                                 ),
+                                 child: const Center(
+                                   child: Icon(
+                                     LucideIcons.slidersHorizontal,
+                                     size: 20,
+                                     color: AppColors.ink,
+                                   ),
+                                 ),
+                               ),
+                             ),
                           ],
                         ],
                       ),
@@ -553,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Toggle button
               Positioned(
-                bottom: MediaQuery.of(context).viewPadding.bottom + 92,
+                bottom: MediaQuery.of(context).viewPadding.bottom + 124,
                 left: 0,
                 right: 0,
                 child: Center(

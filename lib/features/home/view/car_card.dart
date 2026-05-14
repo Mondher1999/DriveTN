@@ -79,7 +79,8 @@ class _CarCardState extends State<CarCard> {
                 spreadRadius: -3,
               ),
               BoxShadow(
-                color: AppColors.accent.withValues(alpha: _pressed ? 0.08 : 0.0),
+                color:
+                    AppColors.accent.withValues(alpha: _pressed ? 0.08 : 0.0),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -223,10 +224,8 @@ class _CarCardState extends State<CarCard> {
           ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, delay: (50 * widget.index).ms)
-        .slideY(begin: 0.2, end: 0, duration: 400.ms, delay: (50 * widget.index).ms);
+    ).animate().fadeIn(duration: 400.ms, delay: (50 * widget.index).ms).slideY(
+        begin: 0.2, end: 0, duration: 400.ms, delay: (50 * widget.index).ms);
   }
 
   Widget _photo(bool isTopPick) {
@@ -251,12 +250,16 @@ class _CarCardState extends State<CarCard> {
               fit: BoxFit.cover,
               placeholder: (_, __) => const SizedBox.shrink(),
               errorWidget: (_, __, ___) => const Center(
-                child: Icon(LucideIcons.car, size: 40, color: AppColors.textMuted),
+                child:
+                    Icon(LucideIcons.car, size: 40, color: AppColors.textMuted),
               ),
             ),
             // Cinematic dark gradient top
             Positioned(
-              top: 0, left: 0, right: 0, height: 80,
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 80,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -272,7 +275,10 @@ class _CarCardState extends State<CarCard> {
             ),
             // Cinematic dark gradient bottom
             Positioned(
-              bottom: 0, left: 0, right: 0, height: 60,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 60,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -289,23 +295,29 @@ class _CarCardState extends State<CarCard> {
             // TOP PICK badge (top-left, glassmorphic)
             if (isTopPick)
               Positioned(
-                top: 10, left: 10,
+                top: 10,
+                left: 10,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                          colors: [
+                            AppColors.gradientStart,
+                            AppColors.gradientEnd
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star_rounded, size: 11, color: AppColors.surface),
+                          const Icon(Icons.star_rounded,
+                              size: 11, color: AppColors.surface),
                           const SizedBox(width: 3),
                           Text(
                             'TOP CHOIX',
@@ -327,13 +339,15 @@ class _CarCardState extends State<CarCard> {
             // Rating glassmorphic badge (top-left if no TOP PICK)
             if (!isTopPick)
               Positioned(
-                top: 10, left: 10,
+                top: 10,
+                left: 10,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 5),
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.72),
                         borderRadius: BorderRadius.circular(999),
@@ -345,11 +359,13 @@ class _CarCardState extends State<CarCard> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.star_rounded, size: 12, color: AppColors.warning),
+                          Icon(Icons.star_rounded,
+                              size: 12, color: AppColors.warning),
                           const SizedBox(width: 3),
                           Text(
                             widget.car.rating.toStringAsFixed(1),
-                            style: AppTypography.body(size: 12, weight: FontWeight.w800),
+                            style: AppTypography.body(
+                                size: 12, weight: FontWeight.w800),
                           ),
                         ],
                       ),
@@ -359,7 +375,8 @@ class _CarCardState extends State<CarCard> {
               ),
             // Heart glassmorphic (top-right)
             Positioned(
-              top: 10, right: 10,
+              top: 10,
+              right: 10,
               child: GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -375,7 +392,8 @@ class _CarCardState extends State<CarCard> {
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      width: 34, height: 34,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.72),
                         shape: BoxShape.circle,
@@ -391,7 +409,8 @@ class _CarCardState extends State<CarCard> {
                         child: Icon(
                           _isLiked ? Icons.favorite : Icons.favorite_border,
                           size: 16,
-                          color: _isLiked ? AppColors.danger : AppColors.textMuted,
+                          color:
+                              _isLiked ? AppColors.danger : AppColors.textMuted,
                         ),
                       ),
                     ),
@@ -408,7 +427,9 @@ class _CarCardState extends State<CarCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    for (int i = 0; i < widget.car.photoUrls.length.clamp(1, 5); i++)
+                    for (int i = 0;
+                        i < widget.car.photoUrls.length.clamp(1, 5);
+                        i++)
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -427,9 +448,11 @@ class _CarCardState extends State<CarCard> {
             // LIVE dot (bottom-right, only if no pagination)
             if (widget.car.photoUrls.length <= 1)
               Positioned(
-                bottom: 10, right: 10,
+                bottom: 10,
+                right: 10,
                 child: Container(
-                  width: 9, height: 9,
+                  width: 9,
+                  height: 9,
                   decoration: BoxDecoration(
                     color: AppColors.success,
                     shape: BoxShape.circle,
@@ -442,9 +465,10 @@ class _CarCardState extends State<CarCard> {
                       ),
                     ],
                   ),
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scale(begin: const Offset(1, 1), end: const Offset(1.3, 1.3), duration: 1200.ms),
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.3, 1.3),
+                    duration: 1200.ms),
               ),
           ],
         ),
@@ -498,7 +522,7 @@ class _AnimatedPrice extends StatelessWidget {
           Text(
             '$v DT',
             style: AppTypography.numeric(
-              size: 20,
+              size: 50,
               weight: FontWeight.w900,
               color: AppColors.accent,
               letterSpacing: -0.5,

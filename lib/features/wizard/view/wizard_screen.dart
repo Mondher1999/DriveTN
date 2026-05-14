@@ -36,7 +36,9 @@ class WizardScreen extends StatelessWidget {
     }
 
     if (state.startDate != null && state.endDate != null) {
-      context.read<CarsCubit>().setSearchDates((state.startDate!, state.endDate!));
+      context
+          .read<CarsCubit>()
+          .setSearchDates((state.startDate!, state.endDate!));
     }
 
     context.go('/home/explorer');
@@ -59,6 +61,14 @@ class WizardScreen extends StatelessWidget {
                     Expanded(
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 320),
+                        layoutBuilder: (currentChild, previousChildren) =>
+                            Stack(
+                          alignment: Alignment.topCenter,
+                          children: [
+                            ...previousChildren,
+                            if (currentChild != null) currentChild,
+                          ],
+                        ),
                         transitionBuilder: (child, animation) => FadeTransition(
                           opacity: animation,
                           child: SlideTransition(
@@ -89,7 +99,7 @@ class WizardScreen extends StatelessWidget {
   // --- top bar ---
   Widget _topBar(BuildContext context, WizardState state) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
       child: Row(
         children: [
           GestureDetector(
@@ -145,38 +155,38 @@ class WizardScreen extends StatelessWidget {
   Widget _progress(WizardState state) {
     final pct = (state.step + 1) / WizardState.totalSteps;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(999),
-        child: SizedBox(
-          height: 4,
-          child: Stack(
-            children: [
-              Container(color: AppColors.border),
-              AnimatedFractionallySizedBox(
-                duration: const Duration(milliseconds: 360),
-                curve: Curves.easeOutCubic,
-                widthFactor: pct,
-                heightFactor: 1,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.gradientStart,
-                        AppColors.gradientEnd,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Stack(
+        children: [
+          Container(
+            height: 3,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(999),
+            ),
           ),
-        ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                height: 3,
+                width: pct * constraints.maxWidth,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  // --- step content ---
+  // --- step router ---
   Widget _stepContent(BuildContext context, WizardState state) {
     switch (state.step) {
       case 0:
@@ -203,10 +213,34 @@ class WizardScreen extends StatelessWidget {
   // --- Step 1: Use case ---
   Widget _stepUseCase(BuildContext context, WizardState state) {
     final items = <(WizardUseCase, IconData, String, String, String?)>[
-      (WizardUseCase.business, LucideIcons.briefcase, 'Business', 'Déplacements professionnels', null),
-      (WizardUseCase.tourism, LucideIcons.mapPin, 'Tourisme', 'Visites & vacances', 'POPULAIRE'),
-      (WizardUseCase.event, LucideIcons.partyPopper, 'Événement', 'Mariage, fête, cérémonie', 'TRENDING'),
-      (WizardUseCase.longTerm, LucideIcons.calendar, 'Longue durée', 'Location mensuelle', null),
+      (
+        WizardUseCase.business,
+        LucideIcons.briefcase,
+        'Business',
+        'Déplacements professionnels',
+        null
+      ),
+      (
+        WizardUseCase.tourism,
+        LucideIcons.mapPin,
+        'Tourisme',
+        'Visites & vacances',
+        'POPULAIRE'
+      ),
+      (
+        WizardUseCase.event,
+        LucideIcons.partyPopper,
+        'Événement',
+        'Mariage, fête, cérémonie',
+        'TRENDING'
+      ),
+      (
+        WizardUseCase.longTerm,
+        LucideIcons.calendar,
+        'Longue durée',
+        'Location mensuelle',
+        null
+      ),
     ];
     return _stepLayout(
       label: '— ÉTAPE 1 / 8',
@@ -245,11 +279,41 @@ class WizardScreen extends StatelessWidget {
   // --- Step 2: Car type ---
   Widget _stepCarType(BuildContext context, WizardState state) {
     final items = <(WizardCarType, IconData, String, String, String?)>[
-      (WizardCarType.city, LucideIcons.car, 'Citadine', 'Compacte & agile', null),
-      (WizardCarType.sedan, LucideIcons.car, 'Berline', 'Confort & élégance', 'POPULAIRE'),
-      (WizardCarType.suv, LucideIcons.mountain, 'SUV', 'Espace & robustesse', null),
-      (WizardCarType.fourByFour, LucideIcons.trees, '4x4', 'Tout-terrain', null),
-      (WizardCarType.convertible, LucideIcons.wind, 'Cabriolet', 'Toit ouvert', null),
+      (
+        WizardCarType.city,
+        LucideIcons.car,
+        'Citadine',
+        'Compacte & agile',
+        null
+      ),
+      (
+        WizardCarType.sedan,
+        LucideIcons.car,
+        'Berline',
+        'Confort & élégance',
+        'POPULAIRE'
+      ),
+      (
+        WizardCarType.suv,
+        LucideIcons.mountain,
+        'SUV',
+        'Espace & robustesse',
+        null
+      ),
+      (
+        WizardCarType.fourByFour,
+        LucideIcons.trees,
+        '4x4',
+        'Tout-terrain',
+        null
+      ),
+      (
+        WizardCarType.convertible,
+        LucideIcons.wind,
+        'Cabriolet',
+        'Toit ouvert',
+        null
+      ),
       (WizardCarType.coupe, LucideIcons.zap, 'Coupé', 'Sport & design', null),
     ];
     return _stepLayout(
@@ -297,101 +361,203 @@ class WizardScreen extends StatelessWidget {
 
   // --- Step 4: Budget ---
   Widget _stepBudget(BuildContext context, WizardState state) {
+    final presets = [
+      (50.0, 150.0, 'Eco', LucideIcons.wallet, const Color(0xFF10B981)),
+      (150.0, 400.0, 'Standard', LucideIcons.car, const Color(0xFF3B82F6)),
+      (400.0, 700.0, 'Premium', LucideIcons.gem, const Color(0xFFF59E0B)),
+      (700.0, 1000.0, 'Luxe', LucideIcons.crown, const Color(0xFF8B5CF6)),
+    ];
+
+    // Clamp budget to the slider's range to avoid assertion errors
+    // when the state holds old values (e.g. from a previous session).
+    final safeStart = state.budget.start.clamp(50.0, 1000.0);
+    final safeEnd = state.budget.end.clamp(50.0, 1000.0);
+    final safeBudget = RangeValues(
+      safeStart <= safeEnd ? safeStart : safeEnd,
+      safeStart <= safeEnd ? safeEnd : safeStart,
+    );
+
+    // Find matching preset for animation
+    final selectedIndex = presets.indexWhere(
+        (p) => safeBudget.start >= p.$1 - 1 && safeBudget.end <= p.$2 + 1);
+
     return _stepLayout(
       label: '— ÉTAPE 4 / 8',
-      title: 'Quel',
+      title: 'Votre',
       titleItalic: 'budget ?',
-      subtitle: 'Faites glisser pour ajuster.',
+      subtitle: 'Sélectionnez une fourchette ou utilisez le slider.',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-          // Big numeric range
+          // Minimal price range display
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                state.budget.start.toInt().toString(),
-                style: AppTypography.numeric(
-                  size: 56,
-                  weight: FontWeight.w900,
-                  color: AppColors.accent,
-                  letterSpacing: -2,
+              TweenAnimationBuilder<int>(
+                tween: IntTween(begin: 50, end: safeBudget.start.round()),
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                builder: (_, value, __) => Text(
+                  'Min — $value DT',
+                  style: AppTypography.body(
+                    size: 14,
+                    weight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
-              Text(
-                ' — ',
-                style: AppTypography.display(
-                  size: 36,
-                  weight: FontWeight.w300,
-                  italic: true,
-                  color: AppColors.textMuted,
-                ),
-              ),
-              Text(
-                state.budget.end.toInt().toString(),
-                style: AppTypography.numeric(
-                  size: 56,
-                  weight: FontWeight.w900,
-                  color: AppColors.accent,
-                  letterSpacing: -2,
+              TweenAnimationBuilder<int>(
+                tween: IntTween(begin: 1000, end: safeBudget.end.round()),
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                builder: (_, value, __) => Text(
+                  '$value DT — Max',
+                  style: AppTypography.body(
+                    size: 14,
+                    weight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'DT par jour',
-            style: AppTypography.caps(
-              size: 11,
-              letterSpacing: 2,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 32),
+          )
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .slideY(begin: 0.1, end: 0, duration: 400.ms),
+          const SizedBox(height: 24),
+          // Visual bar
+          _buildBudgetBar(safeBudget),
+          const SizedBox(height: 24),
+          // RangeSlider — premium custom theme
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
+              trackHeight: 6,
               activeTrackColor: AppColors.accent,
-              inactiveTrackColor: AppColors.border,
-              thumbColor: AppColors.ink,
-              overlayColor: AppColors.accent.withValues(alpha: 0.1),
-              rangeThumbShape:
-                  const RoundRangeSliderThumbShape(enabledThumbRadius: 12),
-              trackHeight: 4,
+              inactiveTrackColor: AppColors.border.withValues(alpha: 0.4),
+              rangeThumbShape: const RoundRangeSliderThumbShape(
+                enabledThumbRadius: 14,
+                elevation: 4,
+                pressedElevation: 8,
+              ),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
+              overlayColor: AppColors.accent.withValues(alpha: 0.12),
+              showValueIndicator: ShowValueIndicator.always,
+              valueIndicatorColor: AppColors.ink,
+              valueIndicatorTextStyle: AppTypography.body(
+                size: 12,
+                weight: FontWeight.w800,
+                color: AppColors.surface,
+              ),
             ),
             child: RangeSlider(
-              values: state.budget,
+              values: safeBudget,
               min: 50,
-              max: 2000,
-              divisions: 39,
-              onChanged: (v) =>
-                  context.read<WizardCubit>().setBudget(v),
+              max: 1000,
+              divisions: 95,
+              labels: RangeLabels(
+                '${safeBudget.start.round()} DT',
+                '${safeBudget.end.round()} DT',
+              ),
+              onChanged: (v) {
+                HapticFeedback.lightImpact();
+                final clampedStart = v.start.clamp(50.0, 1000.0);
+                final clampedEnd = v.end.clamp(50.0, 1000.0);
+                context.read<WizardCubit>().setBudget(
+                      RangeValues(
+                        clampedStart <= clampedEnd ? clampedStart : clampedEnd,
+                        clampedStart <= clampedEnd ? clampedEnd : clampedStart,
+                      ),
+                    );
+              },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Éco · 50',
-                  style: AppTypography.caps(
-                    size: 10,
-                    letterSpacing: 1.6,
-                    color: AppColors.textMuted,
+          const SizedBox(height: 20),
+          // Preset chips
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: presets.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final p = presets[index];
+                final isSelected = selectedIndex == index;
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    context
+                        .read<WizardCubit>()
+                        .setBudget(RangeValues(p.$1, p.$2));
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? LinearGradient(
+                              colors: [p.$5, p.$5.withValues(alpha: 0.8)],
+                            )
+                          : null,
+                      color: isSelected ? null : AppColors.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color:
+                            isSelected ? Colors.transparent : AppColors.border,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: p.$5.withValues(alpha: 0.35),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(p.$4,
+                            size: 14,
+                            color: isSelected ? AppColors.surface : p.$5),
+                        const SizedBox(width: 4),
+                        Text(
+                          p.$3,
+                          style: AppTypography.body(
+                            size: 11,
+                            weight:
+                                isSelected ? FontWeight.w700 : FontWeight.w600,
+                            color:
+                                isSelected ? AppColors.surface : AppColors.ink,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  'Premium · 2000',
-                  style: AppTypography.caps(
-                    size: 10,
-                    letterSpacing: 1.6,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
+                )
+                    .animate()
+                    .fadeIn(delay: (100 + index * 80).ms, duration: 350.ms)
+                    .slideX(
+                        begin: 0.2,
+                        end: 0,
+                        delay: (100 + index * 80).ms,
+                        duration: 350.ms);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Price distribution hint
+          Center(
+            child: Text(
+              'Faites glisser les curseurs pour affiner',
+              style: AppTypography.body(
+                size: 12,
+                color: AppColors.textMuted,
+              ),
             ),
           ),
         ],
@@ -399,26 +565,70 @@ class WizardScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildBudgetBar(RangeValues budget) {
+    final total = 1000.0 - 50.0;
+    final leftPct = ((budget.start - 50) / total).clamp(0.0, 1.0);
+    final widthPct = ((budget.end - budget.start) / total).clamp(0.0, 1.0);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final barWidth = constraints.maxWidth;
+        return Container(
+          height: 10,
+          decoration: BoxDecoration(
+            color: AppColors.border.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                left: leftPct * barWidth,
+                top: 0,
+                bottom: 0,
+                width: widthPct * barWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                    ),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // --- Step 5: Fuel ---
   Widget _stepFuel(BuildContext context, WizardState state) {
-    final items = <(WizardFuel, IconData, String, String, String?)>[
-      (WizardFuel.gasoline, LucideIcons.fuel, 'Essence', 'Performance', null),
-      (WizardFuel.diesel, LucideIcons.droplet, 'Diesel', 'Économique', null),
-      (WizardFuel.hybrid, LucideIcons.leaf, 'Hybride', 'Le meilleur des deux', 'ÉCO'),
-      (WizardFuel.any, LucideIcons.shuffle, 'Peu importe', 'Toutes options', null),
+    final items = <(WizardFuel, IconData, String, String)>[
+      (WizardFuel.gasoline, LucideIcons.fuel, 'Essence', 'Le plus courant'),
+      (WizardFuel.diesel, LucideIcons.fuel, 'Diesel', 'Autonomie & couple'),
+      (WizardFuel.hybrid, LucideIcons.leaf, 'Hybride', 'Économique & propre'),
+      (
+        WizardFuel.any,
+        LucideIcons.settings2,
+        'Peu importe',
+        'Tous les carburants'
+      ),
     ];
     return _stepLayout(
       label: '— ÉTAPE 5 / 8',
       title: 'Quel',
       titleItalic: 'carburant ?',
-      subtitle: 'Pour matcher vos préférences à la pompe.',
+      subtitle: 'Votre préférence énergétique.',
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 1.18,
+        childAspectRatio: 1.3,
         children: [
           for (final item in items)
             _premiumTile(
@@ -426,14 +636,12 @@ class WizardScreen extends StatelessWidget {
               icon: item.$2,
               title: item.$3,
               caption: item.$4,
-              badge: item.$5,
-              onTap: () async {
+              onTap: () {
                 HapticFeedback.lightImpact();
                 context.read<WizardCubit>().setFuel(item.$1);
-                await Future.delayed(const Duration(milliseconds: 380));
-                if (context.mounted) {
-                  context.read<WizardCubit>().next();
-                }
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (context.mounted) context.read<WizardCubit>().next();
+                });
               },
             ),
         ],
@@ -443,10 +651,10 @@ class WizardScreen extends StatelessWidget {
 
   // --- Step 6: Seats ---
   Widget _stepSeats(BuildContext context, WizardState state) {
-    final items = <(WizardSeats, IconData, String, String, String?)>[
-      (WizardSeats.small, LucideIcons.user, 'Petit', '2-4 places', null),
-      (WizardSeats.medium, LucideIcons.users, 'Standard', '5 places', 'POPULAIRE'),
-      (WizardSeats.large, LucideIcons.users, 'Grand', '7+ places', null),
+    final items = <(WizardSeats, IconData, String, String)>[
+      (WizardSeats.small, LucideIcons.user, 'Petite', '2-4 places'),
+      (WizardSeats.medium, LucideIcons.users, 'Moyenne', '5 Places'),
+      (WizardSeats.large, LucideIcons.userPlus, 'Grande', '7+ places'),
     ];
     return _stepLayout(
       label: '— ÉTAPE 6 / 8',
@@ -458,12 +666,12 @@ class WizardScreen extends StatelessWidget {
           for (final item in items)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
+              // ✅ After
               child: _premiumWideTile(
                 selected: state.seats == item.$1,
                 icon: item.$2,
                 title: item.$3,
                 caption: item.$4,
-                badge: item.$5,
                 onTap: () async {
                   HapticFeedback.lightImpact();
                   context.read<WizardCubit>().setSeats(item.$1);
@@ -481,10 +689,25 @@ class WizardScreen extends StatelessWidget {
 
   // --- Step 7: Transmission ---
   Widget _stepTransmission(BuildContext context, WizardState state) {
-    final items = <(WizardTransmission, IconData, String, String, String?)>[
-      (WizardTransmission.automatic, LucideIcons.zap, 'Automatique', 'Confort total', 'POPULAIRE'),
-      (WizardTransmission.manual, LucideIcons.cog, 'Manuelle', 'Plus économique', null),
-      (WizardTransmission.any, LucideIcons.shuffle, 'Peu importe', 'Toutes options', null),
+    final items = <(WizardTransmission, IconData, String, String)>[
+      (
+        WizardTransmission.automatic,
+        LucideIcons.cog,
+        'Automatique',
+        'Confort & simplicité'
+      ),
+      (
+        WizardTransmission.manual,
+        LucideIcons.wrench,
+        'Manuelle',
+        'Contrôle & sensation'
+      ),
+      (
+        WizardTransmission.any,
+        LucideIcons.settings2,
+        'Peu importe',
+        'Toutes les boîtes'
+      ),
     ];
     return _stepLayout(
       label: '— ÉTAPE 7 / 8',
@@ -501,7 +724,6 @@ class WizardScreen extends StatelessWidget {
                 icon: item.$2,
                 title: item.$3,
                 caption: item.$4,
-                badge: item.$5,
                 onTap: () async {
                   HapticFeedback.lightImpact();
                   context.read<WizardCubit>().setTransmission(item.$1);
@@ -534,271 +756,6 @@ class WizardScreen extends StatelessWidget {
             _finish(context, context.read<WizardCubit>().state);
           }
         },
-      ),
-    );
-  }
-
-  List<_PickupItem> _pickupItems() => const [
-    _PickupItem(WizardPickup.aeroportTunisCarthage, LucideIcons.plane, 'Aéroport Tunis-Carthage (TUN)'),
-    _PickupItem(WizardPickup.aeroportDjerbaZarzis, LucideIcons.plane, 'Aéroport Djerba-Zarzis (DJE)'),
-    _PickupItem(WizardPickup.aeroportMonastir, LucideIcons.plane, 'Aéroport Monastir (MIR)'),
-    _PickupItem(WizardPickup.aeroportSfax, LucideIcons.plane, 'Aéroport Sfax (SFA)'),
-    _PickupItem(WizardPickup.djerba, LucideIcons.palmtree, 'Djerba'),
-    _PickupItem(WizardPickup.djerbaHoumetSouk, LucideIcons.palmtree, 'Djerba-Houmet Souk'),
-    _PickupItem(WizardPickup.djerbaMidoun, LucideIcons.palmtree, 'Djerba-Midoun'),
-    _PickupItem(WizardPickup.djerbaZoneTouristique, LucideIcons.palmtree, 'Djerba-Zone Touristique'),
-    _PickupItem(WizardPickup.hammamet, LucideIcons.umbrella, 'Hammamet'),
-    _PickupItem(WizardPickup.mahdia, LucideIcons.landmark, 'Mahdia'),
-    _PickupItem(WizardPickup.monastir, LucideIcons.landmark, 'Monastir'),
-    _PickupItem(WizardPickup.sfax, LucideIcons.building, 'Sfax'),
-    _PickupItem(WizardPickup.sousse, LucideIcons.building, 'Sousse'),
-    _PickupItem(WizardPickup.tunis, LucideIcons.building, 'Tunis'),
-    _PickupItem(WizardPickup.tunisCentre, LucideIcons.building, 'Tunis Centre'),
-    _PickupItem(WizardPickup.laMarsa, LucideIcons.waves, 'La Marsa'),
-    _PickupItem(WizardPickup.lac1, LucideIcons.briefcase, 'Lac 1'),
-    _PickupItem(WizardPickup.lac2, LucideIcons.building2, 'Lac 2'),
-    _PickupItem(WizardPickup.ariana, LucideIcons.home, 'Ariana'),
-    _PickupItem(WizardPickup.soukra, LucideIcons.trees, 'Soukra'),
-    _PickupItem(WizardPickup.carthage, LucideIcons.landmark, 'Carthage'),
-    _PickupItem(WizardPickup.any, LucideIcons.shuffle, 'Peu importe'),
-  ];
-
-  // --- shared layout for steps ---
-  Widget _stepLayout({
-    required String label,
-    required String title,
-    required String titleItalic,
-    required String subtitle,
-    required Widget child,
-  }) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTypography.caps(
-              size: 10,
-              letterSpacing: 3,
-              color: AppColors.accent,
-            ),
-          ),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: AppTypography.display(
-                size: 36,
-                weight: FontWeight.w900,
-                letterSpacing: -1.4,
-              ),
-              children: [
-                TextSpan(text: title),
-                const WidgetSpan(child: SizedBox(width: 8)),
-                TextSpan(
-                  text: titleItalic,
-                  style: AppTypography.display(
-                    size: 36,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    letterSpacing: -1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: AppTypography.body(
-              size: 13,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 24),
-          child,
-        ],
-      ),
-    );
-  }
-
-  // --- tiles ---
-  Widget _premiumTile({
-    required bool selected,
-    required IconData icon,
-    required String title,
-    required String caption,
-    String? badge,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              gradient: selected
-                  ? const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.gradientStart, AppColors.gradientEnd],
-                    )
-                  : LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.surface,
-                        AppColors.softWarm.withValues(alpha: 0.45),
-                      ],
-                    ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected ? Colors.transparent : AppColors.border,
-                width: 1,
-              ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        offset: const Offset(0, 10),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: AppColors.ink.withValues(alpha: 0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 260),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.surface.withValues(alpha: 0.22)
-                        : AppColors.softWarm,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 22,
-                    color: selected ? AppColors.surface : AppColors.accent,
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.h2(
-                        size: 16,
-                        weight: FontWeight.w800,
-                        color: selected ? AppColors.surface : AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      caption,
-                      style: AppTypography.body(
-                        size: 11,
-                        weight: FontWeight.w500,
-                        color: selected
-                            ? AppColors.surface.withValues(alpha: 0.85)
-                            : AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (badge != null && !selected)
-            Positioned(
-              top: -8,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.ink,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  badge,
-                  style: AppTypography.caps(
-                    size: 8,
-                    letterSpacing: 1.2,
-                    color: AppColors.surface,
-                  ),
-                ),
-              ),
-            ),
-          if (selected)
-            Positioned.fill(
-              child: _sparkles(keyForTrigger: ValueKey('${title}_$selected')),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _sparkles({required Key keyForTrigger}) {
-    const positions = [
-      Offset(8, -4),
-      Offset(-6, 12),
-      Offset(50, -8),
-      Offset(70, 30),
-      Offset(-4, 50),
-      Offset(80, 80),
-    ];
-    return IgnorePointer(
-      child: Stack(
-        key: keyForTrigger,
-        children: [
-          for (int i = 0; i < positions.length; i++)
-            Positioned(
-              left: positions[i].dx,
-              top: positions[i].dy,
-              child: Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: i.isEven
-                      ? AppColors.gradientStart
-                      : AppColors.gradientEnd,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (i.isEven
-                              ? AppColors.gradientStart
-                              : AppColors.gradientEnd)
-                          .withValues(alpha: 0.6),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              )
-                  .animate()
-                  .scale(
-                    begin: const Offset(0.3, 0.3),
-                    end: const Offset(1.6, 1.6),
-                    duration: 700.ms,
-                    curve: Curves.easeOut,
-                    delay: (i * 30).ms,
-                  )
-                  .fadeOut(duration: 700.ms, delay: (i * 30).ms),
-            ),
-        ],
       ),
     );
   }
@@ -887,7 +844,8 @@ class WizardScreen extends StatelessWidget {
                             style: AppTypography.h2(
                               size: 17,
                               weight: FontWeight.w800,
-                              color: selected ? AppColors.surface : AppColors.ink,
+                              color:
+                                  selected ? AppColors.surface : AppColors.ink,
                             ),
                           ),
                           if (badge != null) ...[
@@ -953,70 +911,359 @@ class WizardScreen extends StatelessWidget {
     );
   }
 
-  // --- bottom bar (floating chevron CTA on Dates / Budget steps) ---
-  Widget _bottomBar(BuildContext context, WizardState state) {
-    final showButton = state.step == 2 || state.step == 3;
-    if (!showButton) return const SizedBox(height: 16);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 240),
-            opacity: state.canAdvance ? 1 : 0.4,
-            child: GestureDetector(
-              onTap: state.canAdvance
-                  ? () {
-                      HapticFeedback.lightImpact();
-                      context.read<WizardCubit>().next();
-                    }
-                  : null,
-              child: Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.gradientStart, AppColors.gradientEnd],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: state.canAdvance
-                      ? [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ]
-                      : null,
+  // --- step layout helper ---
+  Widget _stepLayout({
+    required String label,
+    required String title,
+    required String titleItalic,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Builder(
+      builder: (context) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.06),
+              Text(
+                label,
+                style: AppTypography.caps(
+                  size: 10,
+                  letterSpacing: 3,
+                  color: AppColors.accent,
                 ),
-                child: const Icon(
-                  LucideIcons.arrowRight,
-                  size: 28,
-                  color: AppColors.surface,
-                ),
-              )
-                  .animate(onPlay: state.canAdvance ? (c) => c.repeat(reverse: true) : null)
-                  .scale(
-                    begin: const Offset(1, 1),
-                    end: const Offset(1.06, 1.06),
-                    duration: 1400.ms,
-                    curve: Curves.easeInOut,
+              ),
+              const SizedBox(height: 10),
+              RichText(
+                text: TextSpan(
+                  style: AppTypography.display(
+                    size: 36,
+                    weight: FontWeight.w900,
+                    letterSpacing: -1.4,
                   ),
-            ),
+                  children: [
+                    TextSpan(text: title),
+                    const WidgetSpan(child: SizedBox(width: 8)),
+                    TextSpan(
+                      text: titleItalic,
+                      style: AppTypography.display(
+                        size: 36,
+                        weight: FontWeight.w300,
+                        italic: true,
+                        letterSpacing: -1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: AppTypography.body(
+                  size: 13,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 20),
+              child,
+            ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  // --- premium selection tile ---
+  Widget _premiumTile({
+    required bool selected,
+    required IconData icon,
+    required String title,
+    required String caption,
+    String? badge,
+    required VoidCallback onTap,
+    bool centerContent = false,
+    bool horizontal = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surface,
+                    AppColors.softWarm.withValues(alpha: 0.3),
+                  ],
+                ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? Colors.transparent : AppColors.border,
+            width: selected ? 0 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: 0.35),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: AppColors.ink.withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        padding: horizontal
+            ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+            : const EdgeInsets.all(16),
+        child: horizontal
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 22,
+                    color: selected ? AppColors.surface : AppColors.accent,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: AppTypography.h2(
+                            size: 15,
+                            weight: FontWeight.w800,
+                            color: selected ? AppColors.surface : AppColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          caption,
+                          style: AppTypography.body(
+                            size: 12,
+                            weight: FontWeight.w500,
+                            color: selected
+                                ? AppColors.surface.withValues(alpha: 0.85)
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: centerContent
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: centerContent
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 22,
+                        color: selected ? AppColors.surface : AppColors.accent,
+                      ),
+                      if (!centerContent) ...[
+                        const Spacer(),
+                        if (badge != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? AppColors.surface.withValues(alpha: 0.22)
+                                  : AppColors.ink,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              badge,
+                              style: AppTypography.caps(
+                                size: 8,
+                                letterSpacing: 1.2,
+                                color: AppColors.surface,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    title,
+                    textAlign:
+                        centerContent ? TextAlign.center : TextAlign.start,
+                    style: AppTypography.h2(
+                      size: 15,
+                      weight: FontWeight.w800,
+                      color: selected ? AppColors.surface : AppColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    caption,
+                    textAlign:
+                        centerContent ? TextAlign.center : TextAlign.start,
+                    style: AppTypography.body(
+                      size: 12,
+                      weight: FontWeight.w500,
+                      color: selected
+                          ? AppColors.surface.withValues(alpha: 0.85)
+                          : AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
-}
 
-// ---------------------------------------------------------------------------
-// Pickup dropdown helpers
-// ---------------------------------------------------------------------------
+  // --- sparkle decoration ---
+  Widget _sparkles({required Key keyForTrigger}) {
+    return Container();
+  }
+
+  // --- bottom bar (floating CTA) ---
+  Widget _bottomBar(BuildContext context, WizardState state) {
+    final bool isDatesStep = state.step == 2;
+    final bool onStartTab = isDatesStep && state.isStartTab;
+    final bool isLastStep = state.step == WizardState.totalSteps - 1;
+    final bool showButton = isDatesStep || state.step == 3;
+
+    if (!showButton) return const SizedBox.shrink();
+
+    final bool canTap = isDatesStep
+        ? (onStartTab ? state.startDate != null : state.canAdvance)
+        : (isLastStep ? state.pickup != null : state.canAdvance);
+
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 240),
+          opacity: canTap ? 1 : 0.4,
+          child: GestureDetector(
+            onTap: canTap
+                ? () {
+                    HapticFeedback.lightImpact();
+                    if (onStartTab) {
+                      context.read<WizardCubit>().setStartTab(false);
+                    } else if (isLastStep) {
+                      _finish(context, state);
+                    } else {
+                      context.read<WizardCubit>().next();
+                    }
+                  }
+                : null,
+            child: Container(
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.gradientStart, AppColors.gradientEnd],
+                ),
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: canTap
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 2),
+                  Text(
+                    onStartTab
+                        ? 'Choisir la date de fin'
+                        : isLastStep
+                            ? 'Voir les résultats'
+                            : 'Continuer',
+                    style: AppTypography.body(
+                      size: 15,
+                      weight: FontWeight.w800,
+                      color: AppColors.surface,
+                    ),
+                  ),
+                ],
+              ),
+            )
+                .animate(onPlay: canTap ? (c) => c.repeat(reverse: true) : null)
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.03, 1.03),
+                  duration: 1400.ms,
+                  curve: Curves.easeInOut,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<_PickupItem> _pickupItems() => const [
+        _PickupItem(WizardPickup.aeroportTunisCarthage, LucideIcons.plane,
+            'Aéroport Tunis-Carthage (TUN)'),
+        _PickupItem(WizardPickup.aeroportDjerbaZarzis, LucideIcons.plane,
+            'Aéroport Djerba-Zarzis (DJE)'),
+        _PickupItem(WizardPickup.aeroportMonastir, LucideIcons.plane,
+            'Aéroport Monastir (MIR)'),
+        _PickupItem(WizardPickup.aeroportSfax, LucideIcons.plane,
+            'Aéroport Sfax (SFA)'),
+        _PickupItem(WizardPickup.djerba, LucideIcons.palmtree, 'Djerba'),
+        _PickupItem(WizardPickup.djerbaHoumetSouk, LucideIcons.palmtree,
+            'Djerba-Houmet Souk'),
+        _PickupItem(
+            WizardPickup.djerbaMidoun, LucideIcons.palmtree, 'Djerba-Midoun'),
+        _PickupItem(WizardPickup.djerbaZoneTouristique, LucideIcons.palmtree,
+            'Djerba-Zone Touristique'),
+        _PickupItem(WizardPickup.hammamet, LucideIcons.umbrella, 'Hammamet'),
+        _PickupItem(WizardPickup.mahdia, LucideIcons.landmark, 'Mahdia'),
+        _PickupItem(WizardPickup.monastir, LucideIcons.landmark, 'Monastir'),
+        _PickupItem(WizardPickup.sfax, LucideIcons.building, 'Sfax'),
+        _PickupItem(WizardPickup.sousse, LucideIcons.building, 'Sousse'),
+        _PickupItem(WizardPickup.tunis, LucideIcons.building, 'Tunis'),
+        _PickupItem(
+            WizardPickup.tunisCentre, LucideIcons.building, 'Tunis Centre'),
+        _PickupItem(WizardPickup.laMarsa, LucideIcons.waves, 'La Marsa'),
+        _PickupItem(WizardPickup.lac1, LucideIcons.briefcase, 'Lac 1'),
+        _PickupItem(WizardPickup.lac2, LucideIcons.building2, 'Lac 2'),
+        _PickupItem(WizardPickup.ariana, LucideIcons.home, 'Ariana'),
+        _PickupItem(WizardPickup.soukra, LucideIcons.trees, 'Soukra'),
+        _PickupItem(WizardPickup.carthage, LucideIcons.landmark, 'Carthage'),
+        _PickupItem(WizardPickup.any, LucideIcons.shuffle, 'Peu importe'),
+      ];
+} // ← closes WizardScreen
+
+// ── helper classes live outside WizardScreen ──────────────────────────────
 
 class _PickupItem {
   final WizardPickup value;
@@ -1024,6 +1271,9 @@ class _PickupItem {
   final String label;
   const _PickupItem(this.value, this.icon, this.label);
 }
+// ---------------------------------------------------------------------------
+// Pickup dropdown helpers
+// ---------------------------------------------------------------------------
 
 class _PickupDropdown extends StatefulWidget {
   final WizardPickup? value;
@@ -1053,7 +1303,9 @@ class _PickupDropdownState extends State<_PickupDropdown> {
   List<_PickupItem> get _filtered {
     final q = _searchCtrl.text.trim().toLowerCase();
     if (q.isEmpty) return widget.items;
-    return widget.items.where((i) => i.label.toLowerCase().contains(q)).toList();
+    return widget.items
+        .where((i) => i.label.toLowerCase().contains(q))
+        .toList();
   }
 
   String get _selectedLabel {
@@ -1112,7 +1364,8 @@ class _PickupDropdownState extends State<_PickupDropdown> {
               children: [
                 // Trigger bar (always visible)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Row(
                     children: [
                       Expanded(
@@ -1145,43 +1398,7 @@ class _PickupDropdownState extends State<_PickupDropdown> {
                     children: [
                       const Divider(height: 1, color: AppColors.border),
                       // Search field
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: TextField(
-                          controller: _searchCtrl,
-                          onChanged: (_) => setState(() {}),
-                          style: AppTypography.body(size: 14, color: AppColors.ink),
-                          decoration: InputDecoration(
-                            hintText: 'Rechercher…',
-                            hintStyle: AppTypography.body(
-                              size: 14,
-                              color: AppColors.textMuted,
-                            ),
-                            prefixIcon: const Icon(
-                              LucideIcons.search,
-                              size: 18,
-                              color: AppColors.textMuted,
-                            ),
-                            filled: true,
-                            fillColor: AppColors.softWarm.withValues(alpha: 0.5),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.accent,
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+
                       const Divider(height: 1, color: AppColors.border),
                       // Options list
                       ConstrainedBox(
@@ -1290,7 +1507,13 @@ class _StepDatesPicker extends StatefulWidget {
 }
 
 class _StepDatesPickerState extends State<_StepDatesPicker> {
-  bool _isStart = true;
+  void _onDateTimeChanged(DateTime date) {
+    if (widget.state.isStartTab) {
+      context.read<WizardCubit>().setStartDate(date);
+    } else {
+      context.read<WizardCubit>().setEndDate(date);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1300,12 +1523,13 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
     final fmt = DateFormat('d MMM yyyy', 'fr_FR');
     final fmtTime = DateFormat('HH:mm', 'fr_FR');
 
-    final pickerDate = _isStart ? start : end;
-    final minDate = _isStart
-        ? DateTime(today.year, today.month, today.day)
-        : start;
+    final isStart = widget.state.isStartTab;
+    final pickerDate = isStart ? start : end;
+    final minDate =
+        isStart ? DateTime(today.year, today.month, today.day) : start;
     final maxDate = today.add(const Duration(days: 90));
-    final hasBoth = widget.state.startDate != null && widget.state.endDate != null;
+    final hasBoth =
+        widget.state.startDate != null && widget.state.endDate != null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1322,8 +1546,8 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
                 timeText: widget.state.startDate != null
                     ? fmtTime.format(widget.state.startDate!)
                     : '--:--',
-                selected: _isStart,
-                onTap: () => setState(() => _isStart = true),
+                selected: isStart,
+                onTap: () => context.read<WizardCubit>().setStartTab(true),
               ),
             ),
             const SizedBox(width: 12),
@@ -1336,8 +1560,9 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
                 timeText: widget.state.endDate != null
                     ? fmtTime.format(widget.state.endDate!)
                     : '--:--',
-                selected: !_isStart,
-                onTap: () => setState(() => _isStart = false),
+                selected: !isStart,
+                needsAttention: isStart && widget.state.startDate != null,
+                onTap: () => context.read<WizardCubit>().setStartTab(false),
               ),
             ),
           ],
@@ -1351,10 +1576,10 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: _isStart
+              color: widget.state.isStartTab
                   ? AppColors.accent.withValues(alpha: 0.25)
                   : AppColors.border,
-              width: _isStart ? 1.5 : 1,
+              width: widget.state.isStartTab ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
@@ -1363,7 +1588,7 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
                 offset: const Offset(0, 8),
                 spreadRadius: -2,
               ),
-              if (_isStart)
+              if (widget.state.isStartTab)
                 BoxShadow(
                   color: AppColors.accent.withValues(alpha: 0.08),
                   blurRadius: 24,
@@ -1386,18 +1611,12 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
                 ),
               ),
               child: CupertinoDatePicker(
-                key: ValueKey(_isStart ? 'start' : 'end'),
+                key: ValueKey(widget.state.isStartTab ? 'start' : 'end'),
                 mode: CupertinoDatePickerMode.dateAndTime,
                 initialDateTime: pickerDate,
                 minimumDate: minDate,
                 maximumDate: maxDate,
-                onDateTimeChanged: (date) {
-                  if (_isStart) {
-                    context.read<WizardCubit>().setStartDate(date);
-                  } else {
-                    context.read<WizardCubit>().setEndDate(date);
-                  }
-                },
+                onDateTimeChanged: _onDateTimeChanged,
               ),
             ),
           ),
@@ -1505,9 +1724,7 @@ class _StepDatesPickerState extends State<_StepDatesPicker> {
                 ),
               ],
             ),
-          )
-              .animate()
-              .fadeIn(duration: 400.ms, delay: 200.ms),
+          ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
         ],
       ],
     );
@@ -1582,6 +1799,7 @@ class _DatePill extends StatelessWidget {
   final String dateText;
   final String timeText;
   final bool selected;
+  final bool needsAttention;
   final VoidCallback onTap;
 
   const _DatePill({
@@ -1589,119 +1807,162 @@ class _DatePill extends StatelessWidget {
     required this.dateText,
     this.timeText = '',
     required this.selected,
+    this.needsAttention = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          gradient: selected
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.gradientStart,
-                    AppColors.gradientEnd,
-                  ],
-                )
-              : LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.surface,
-                    AppColors.softWarm.withValues(alpha: 0.3),
-                  ],
-                ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: selected
-                ? Colors.transparent
-                : AppColors.border,
-            width: selected ? 0 : 1,
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.35),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: AppColors.ink.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
+    final pill = AnimatedContainer(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: selected
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.gradientStart,
+                  AppColors.gradientEnd,
                 ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.surface,
+                  AppColors.softWarm.withValues(alpha: 0.3),
+                ],
+              ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: selected
+              ? Colors.transparent
+              : needsAttention
+                  ? AppColors.accent.withValues(alpha: 0.5)
+                  : AppColors.border,
+          width: selected ? 0 : (needsAttention ? 1.5 : 1),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  label,
-                  style: AppTypography.caps(
-                    size: 9,
-                    letterSpacing: 1.8,
-                    color: selected
-                        ? AppColors.surface.withValues(alpha: 0.9)
-                        : AppColors.textMuted,
-                  ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.35),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
-                if (selected) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.surface.withValues(alpha: 0.5),
-                          blurRadius: 6,
-                        ),
-                      ],
+              ]
+            : needsAttention
+                ? [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                  )
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .fadeIn(duration: 1000.ms, curve: Curves.easeInOut),
-                ],
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              dateText,
-              style: AppTypography.h2(
-                size: 15,
-                weight: FontWeight.w800,
-                color: selected ? AppColors.surface : AppColors.ink,
-              ),
-            ),
-            if (timeText.isNotEmpty) ...[
-              const SizedBox(height: 2),
+                  ]
+                : [
+                    BoxShadow(
+                      color: AppColors.ink.withValues(alpha: 0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
               Text(
-                timeText,
-                style: AppTypography.body(
-                  size: 12,
-                  weight: FontWeight.w600,
+                label,
+                style: AppTypography.caps(
+                  size: 9,
+                  letterSpacing: 1.8,
                   color: selected
-                      ? AppColors.surface.withValues(alpha: 0.85)
-                      : AppColors.textSecondary,
+                      ? AppColors.surface.withValues(alpha: 0.9)
+                      : needsAttention
+                          ? AppColors.accent
+                          : AppColors.textMuted,
                 ),
               ),
+              if (selected) ...[
+                const SizedBox(width: 6),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.surface.withValues(alpha: 0.5),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .fadeIn(duration: 1000.ms, curve: Curves.easeInOut),
+              ],
+              if (needsAttention && !selected) ...[
+                const SizedBox(width: 6),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.5),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                      begin: const Offset(0.6, 0.6),
+                      end: const Offset(1.2, 1.2),
+                      duration: 800.ms,
+                      curve: Curves.easeInOut,
+                    ),
+              ],
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            dateText,
+            style: AppTypography.h2(
+              size: 15,
+              weight: FontWeight.w800,
+              color: selected ? AppColors.surface : AppColors.ink,
+            ),
+          ),
+          if (timeText.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              timeText,
+              style: AppTypography.body(
+                size: 12,
+                weight: FontWeight.w600,
+                color: selected
+                    ? AppColors.surface.withValues(alpha: 0.85)
+                    : AppColors.textSecondary,
+              ),
+            ),
           ],
-        ),
+        ],
       ),
+    );
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: needsAttention && !selected
+          ? pill.animate().shimmer(
+              duration: 1200.ms, color: AppColors.accent.withValues(alpha: 0.1))
+          : pill,
     );
   }
 }

@@ -6,6 +6,8 @@ import '../../theme/app_typography.dart';
 
 enum ButtonVariant { ink, light, ghost, gradient, accent }
 
+enum IconPosition { left, right }
+
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -13,6 +15,7 @@ class PrimaryButton extends StatelessWidget {
   final IconData? icon;
   final ButtonVariant variant;
   final Color? color;
+  final IconPosition iconPosition;
 
   const PrimaryButton({
     super.key,
@@ -22,6 +25,7 @@ class PrimaryButton extends StatelessWidget {
     this.icon,
     this.variant = ButtonVariant.ink,
     this.color,
+    this.iconPosition = IconPosition.right,
   });
 
   @override
@@ -106,6 +110,10 @@ class PrimaryButton extends StatelessWidget {
                     : Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (icon != null && iconPosition == IconPosition.left) ...[
+                            Icon(icon, size: 18, color: fg),
+                            const SizedBox(width: 10),
+                          ],
                           Text(
                             label,
                             style: AppTypography.body(
@@ -115,7 +123,7 @@ class PrimaryButton extends StatelessWidget {
                               letterSpacing: 0.2,
                             ),
                           ),
-                          if (icon != null) ...[
+                          if (icon != null && iconPosition == IconPosition.right) ...[
                             const SizedBox(width: 10),
                             Icon(icon, size: 18, color: fg),
                           ],
