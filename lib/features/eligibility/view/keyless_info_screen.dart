@@ -17,6 +17,12 @@ class KeylessInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final car = MockData.carById(carId);
+    final mq = MediaQuery.of(context);
+    final screenHeight = mq.size.height;
+    final safeBottom = mq.padding.bottom;
+    final isCompact = screenHeight < 820;
+    final imageSize = isCompact ? 200.0 : 220.0;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -24,7 +30,7 @@ class KeylessInfoScreen extends StatelessWidget {
           children: [
             // Top bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: EdgeInsets.fromLTRB(20, isCompact ? 8 : 16, 20, 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -89,8 +95,8 @@ class KeylessInfoScreen extends StatelessWidget {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(28),
                             child: SizedBox(
-                              width: 220,
-                              height: 220,
+                              width: imageSize,
+                              height: imageSize,
                               child: car != null
                                   ? Stack(
                                       fit: StackFit.expand,
@@ -156,8 +162,8 @@ class KeylessInfoScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.accent
-                                        .withValues(alpha: 0.4),
+                                    color:
+                                        AppColors.accent.withValues(alpha: 0.4),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                   ),
@@ -179,16 +185,13 @@ class KeylessInfoScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 500.ms)
-                        .scale(
+                    ).animate().fadeIn(duration: 500.ms).scale(
                           begin: const Offset(0.85, 0.85),
                           end: const Offset(1, 1),
                           curve: Curves.easeOutBack,
                           duration: 500.ms,
                         ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: isCompact ? 20 : 28),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
@@ -205,7 +208,10 @@ class KeylessInfoScreen extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+                    )
+                        .animate()
+                        .fadeIn(delay: 200.ms)
+                        .slideY(begin: 0.1, end: 0),
                     Text(
                       'avec votre smartphone.',
                       style: AppTypography.display(
@@ -215,8 +221,11 @@ class KeylessInfoScreen extends StatelessWidget {
                         letterSpacing: -1.2,
                         height: 1.05,
                       ),
-                    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1, end: 0),
-                    const SizedBox(height: 24),
+                    )
+                        .animate()
+                        .fadeIn(delay: 250.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    SizedBox(height: isCompact ? 16 : 24),
                     _bullet(
                       icon: LucideIcons.shieldCheck,
                       title: "Pas besoin de rencontrer qui que ce soit",
@@ -245,7 +254,8 @@ class KeylessInfoScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+              padding: EdgeInsets.fromLTRB(
+                  24, 12, 24, safeBottom + (isCompact ? 8 : 16)),
               child: PrimaryButton(
                 label: "D'accord, continuer",
                 icon: LucideIcons.arrowRight,

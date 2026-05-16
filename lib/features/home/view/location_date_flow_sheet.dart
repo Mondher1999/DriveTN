@@ -627,43 +627,103 @@ class _LocationDateFlowSheetState extends State<LocationDateFlowSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Selected location recap
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.softWarm.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.12),
+          // Selected location recap — clearer UX
+          GestureDetector(
+            onTap: () => _goToStep(0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.accent.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
-            ),
-            child: Row(
-              children: [
-                const Icon(LucideIcons.mapPin,
-                    size: 16, color: AppColors.accent),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    _selectedLocation ?? 'Lieu inconnu',
-                    style: AppTypography.body(
-                      size: 14,
-                      weight: FontWeight.w700,
-                      color: AppColors.ink,
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.gradientStart,
+                          AppColors.gradientEnd,
+                        ],
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      LucideIcons.mapPin,
+                      size: 16,
+                      color: AppColors.surface,
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () => _goToStep(0),
-                  child: Text(
-                    'Modifier',
-                    style: AppTypography.body(
-                      size: 12,
-                      weight: FontWeight.w700,
-                      color: AppColors.accent,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Lieu de prise en charge',
+                          style: AppTypography.caps(
+                            size: 10,
+                            letterSpacing: 1.2,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _selectedLocation ?? 'Lieu inconnu',
+                          style: AppTypography.body(
+                            size: 14,
+                            weight: FontWeight.w800,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          LucideIcons.pencil,
+                          size: 12,
+                          color: AppColors.accent,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Modifier',
+                          style: AppTypography.body(
+                            size: 11,
+                            weight: FontWeight.w800,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
               .animate()

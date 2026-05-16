@@ -12,6 +12,7 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../bloc/booking_cubit.dart';
+import 'pickup_guide_sheet.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
   final String carId;
@@ -82,12 +83,19 @@ class BookingSuccessScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 Center(
-                  child: Text(
-                    '— RÉSERVATION CONFIRMÉE',
-                    style: AppTypography.caps(
-                      size: 10,
-                      letterSpacing: 3,
-                      color: AppColors.accent,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Location confirmée',
+                      style: AppTypography.body(
+                        size: 12,
+                        weight: FontWeight.w700,
+                        color: AppColors.accent,
+                      ),
                     ),
                   ).animate().fadeIn(delay: 600.ms),
                 ),
@@ -153,11 +161,10 @@ class BookingSuccessScreen extends StatelessWidget {
                 const Spacer(),
                 if (booking != null)
                   PrimaryButton(
-                    label: "Démarrer l'inspection",
-                    icon: LucideIcons.video,
+                    label: 'Voir le guide de prise en charge',
+                    icon: LucideIcons.bookOpen,
                     variant: ButtonVariant.gradient,
-                    onPressed: () =>
-                        context.push('/inspection/pickup/${booking.id}'),
+                    onPressed: () => PickupGuideSheet.show(context),
                   ).animate().fadeIn(delay: 1100.ms),
                 const SizedBox(height: 12),
                 TextButton(
@@ -186,7 +193,7 @@ class BookingSuccessScreen extends StatelessWidget {
         children: [
           Expanded(
             child: Text(label,
-                style: AppTypography.caps(size: 10, color: AppColors.textMuted)),
+                style: AppTypography.body(size: 11, weight: FontWeight.w600, color: AppColors.textMuted)),
           ),
           Text(value, style: AppTypography.body(size: 14, weight: FontWeight.w700)),
         ],

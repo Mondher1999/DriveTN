@@ -52,8 +52,7 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  void _next() =>
-      setState(() => _step = (_step + 1).clamp(0, _totalSteps - 1));
+  void _next() => setState(() => _step = (_step + 1).clamp(0, _totalSteps - 1));
   void _prev() {
     if (_step > 0) {
       setState(() => _step -= 1);
@@ -269,7 +268,9 @@ class _BookingScreenState extends State<BookingScreen> {
             pricePerDay: 30,
             onTap: () {
               HapticFeedback.lightImpact();
-              context.read<BookingCubit>().toggleUnlimitedKm(!state.unlimitedKm);
+              context
+                  .read<BookingCubit>()
+                  .toggleUnlimitedKm(!state.unlimitedKm);
             },
           ),
         ],
@@ -560,8 +561,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     _extraRecap('Conducteur additionnel',
                         '+${20 * state.durationDays} DT'),
                   if (state.babySeat)
-                    _extraRecap(
-                        'Siège bébé', '+${10 * state.durationDays} DT'),
+                    _extraRecap('Siège bébé', '+${10 * state.durationDays} DT'),
                   if (state.unlimitedKm)
                     _extraRecap('Kilométrage illimité',
                         '+${30 * state.durationDays} DT'),
@@ -650,9 +650,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               ],
             ),
-          )
-              .animate(onPlay: (c) => c.repeat(period: 2800.ms))
-              .shimmer(
+          ).animate(onPlay: (c) => c.repeat(period: 2800.ms)).shimmer(
                 duration: 1500.ms,
                 color: AppColors.surface.withValues(alpha: 0.3),
                 delay: 800.ms,
@@ -762,7 +760,7 @@ class _BookingScreenState extends State<BookingScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
       child: PrimaryButton(
-        label: isLast ? 'Vers le paiement →' : 'Continuer',
+        label: isLast ? "Vérifier mon identité" : 'Continuer',
         icon: LucideIcons.arrowRight,
         variant: ButtonVariant.gradient,
         onPressed: _canAdvance(state)

@@ -3,15 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../data/mock_data.dart';
+import '../../../data/models/booking.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
+import '../../booking/view/pre_rental_unlock_modal.dart';
 
 /// Fixed bottom tab bar (Airbnb style).
 /// - Full-width, pinned to the bottom with a top border.
 /// - Opaque surface background (no blur, no float).
 /// - 4 tabs: icon + label.
 /// - Coral accent for active; muted grey for inactive.
-class MainShell extends StatelessWidget {
+class MainShell extends StatefulWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
@@ -23,10 +26,42 @@ class MainShell extends StatelessWidget {
     ('/home/profile', LucideIcons.user, 'Compte'),
   ];
 
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  bool _autoModalChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showPreRentalModalIfNeeded();
+    });
+  }
+
+  void _showPreRentalModalIfNeeded() {
+    if (_autoModalChecked) return;
+    _autoModalChecked = true;
+
+    final now = DateTime.now();
+    final upcoming = MockData.bookings.where(
+      (b) =>
+          b.status == BookingStatus.confirmed &&
+          b.startDate.isAfter(now) &&
+          b.startDate.difference(now).inMinutes <= 15,
+    );
+
+    if (upcoming.isNotEmpty && mounted) {
+      PreRentalUnlockModal.show(context);
+    }
+  }
+
   int _indexOfLocation(String location) {
     if (location == '/discovery' || location.startsWith('/home/explorer')) return 0;
-    for (int i = 0; i < _tabs.length; i++) {
-      if (location.startsWith(_tabs[i].$1)) return i;
+    for (int i = 0; i < MainShell._tabs.length; i++) {
+      if (location.startsWith(MainShell._tabs[i].$1)) return i;
     }
     return 0;
   }
@@ -38,9 +73,9 @@ class MainShell extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      body: child,
+      body: widget.child,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.surface,
           border: Border(
             top: BorderSide(color: AppColors.border),
@@ -52,15 +87,15 @@ class MainShell extends StatelessWidget {
             height: 60,
             child: Row(
               children: [
-                for (int i = 0; i < _tabs.length; i++)
+                for (int i = 0; i < MainShell._tabs.length; i++)
                   Expanded(
                     child: _TabButton(
-                      icon: _tabs[i].$2,
-                      label: _tabs[i].$3,
+                      icon: MainShell._tabs[i].$2,
+                      label: MainShell._tabs[i].$3,
                       active: i == currentIndex,
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        context.go(_tabs[i].$1);
+                        context.go(MainShell._tabs[i].$1);
                       },
                     ),
                   ),

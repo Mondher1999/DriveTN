@@ -27,6 +27,7 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
   bool _capturedRecto = false;
   bool _capturedVerso = false;
   bool _capturedPassport = false;
+  bool _capturedPermis = false;
 
   late final AnimationController _scanLineCtrl;
   Timer? _scanTimer;
@@ -51,24 +52,26 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
   }
 
   bool get _isComplete =>
-      _capturedRecto && _capturedVerso && _capturedPassport;
+      _capturedRecto && _capturedVerso && _capturedPassport && _capturedPermis;
 
-  // 0 = CIN recto, 1 = CIN verso, 2 = Passeport
+  // 0 = CIN recto, 1 = CIN verso, 2 = Passeport, 3 = Permis
   int get _currentStepIndex {
     if (!_capturedRecto) return 0;
     if (!_capturedVerso) return 1;
-    return 2;
+    if (!_capturedPassport) return 2;
+    return 3;
   }
 
   String get _currentLabel {
     if (_phase == 0) {
       return _cinStep == 0 ? 'CIN — RECTO' : 'CIN — VERSO';
     }
-    return 'PASSEPORT';
+    if (_phase == 1) return 'PASSEPORT';
+    return 'PERMIS DE CONDUIRE';
   }
 
   String get _statusText {
-    if (_isComplete) return 'Identité vérifiée — CIN + passeport ✓';
+    if (_isComplete) return 'Identité vérifiée — CIN + passeport + permis ✓';
     if (_isScanning) return 'Détection en cours...';
     return 'Cadrez votre document dans le rectangle ci-dessus.';
   }
@@ -99,8 +102,15 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
               _startScan();
             });
           }
-        } else {
+        } else if (_phase == 1) {
           _capturedPassport = true;
+          Future.delayed(const Duration(milliseconds: 800), () {
+            if (!mounted) return;
+            setState(() => _phase = 2);
+            _startScan();
+          });
+        } else {
+          _capturedPermis = true;
         }
       });
     });
@@ -158,7 +168,7 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "CIN tunisienne + Passeport — c'est rapide.",
+                      "CIN + Passeport + Permis — c'est rapide.",
                       style: AppTypography.body(
                         size: 13,
                         color: AppColors.textMuted,
@@ -172,7 +182,8 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
                     _statusBanner(),
                     if (_capturedRecto ||
                         _capturedVerso ||
-                        _capturedPassport) ...[
+                        _capturedPassport ||
+                        _capturedPermis) ...[
                       const SizedBox(height: 16),
                       _capturedThumbnails(),
                     ],
@@ -188,8 +199,10 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
   }
 
   Widget _topBar() {
+    final mq = MediaQuery.of(context);
+    final isCompact = mq.size.height < 820;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: EdgeInsets.fromLTRB(20, isCompact ? 8 : 16, 20, 8),
       child: Row(
         children: [
           GestureDetector(
@@ -241,8 +254,9 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
   Widget _progress() {
     final captured = (_capturedRecto ? 1 : 0) +
         (_capturedVerso ? 1 : 0) +
-        (_capturedPassport ? 1 : 0);
-    double pct = captured / 3.0;
+        (_capturedPassport ? 1 : 0) +
+        (_capturedPermis ? 1 : 0);
+    double pct = captured / 4.0;
     if (pct == 0 && _isScanning) pct = 0.12;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -281,6 +295,7 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
       ('①', 'CIN — Recto', _capturedRecto, _currentStepIndex == 0),
       ('②', 'CIN — Verso', _capturedVerso, _currentStepIndex == 1),
       ('③', 'Passeport', _capturedPassport, _currentStepIndex == 2),
+      ('④', 'Permis de conduire', _capturedPermis, _currentStepIndex == 3),
     ];
 
     return Container(
@@ -442,8 +457,10 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
     final bool isCurrentDone;
     if (_phase == 0) {
       isCurrentDone = _cinStep == 0 ? _capturedRecto : _capturedVerso;
-    } else {
+    } else if (_phase == 1) {
       isCurrentDone = _capturedPassport;
+    } else {
+      isCurrentDone = _capturedPermis;
     }
 
     return AspectRatio(
@@ -499,9 +516,11 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
                         Icon(
                           isCurrentDone
                               ? LucideIcons.check
-                              : (_phase == 1
-                                  ? LucideIcons.bookOpen
-                                  : LucideIcons.creditCard),
+                              : (_phase == 2
+                                  ? LucideIcons.fileText
+                                  : (_phase == 1
+                                      ? LucideIcons.bookOpen
+                                      : LucideIcons.creditCard)),
                           size: 36,
                           color: isCurrentDone
                               ? AppColors.success
@@ -684,6 +703,7 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
       ('Recto', _capturedRecto),
       ('Verso', _capturedVerso),
       ('Passeport', _capturedPassport),
+      ('Permis', _capturedPermis),
     ];
     return Wrap(
       spacing: 8,
@@ -732,8 +752,11 @@ class _IdentityScanScreenState extends State<IdentityScanScreen>
   }
 
   Widget _bottomBar() {
+    final mq = MediaQuery.of(context);
+    final safeBottom = mq.padding.bottom;
+    final isCompact = mq.size.height < 820;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, safeBottom + (isCompact ? 8 : 16)),
       child: PrimaryButton(
         label: 'Continuer vers paiement',
         icon: LucideIcons.arrowRight,

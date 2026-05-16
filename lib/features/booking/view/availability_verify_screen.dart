@@ -24,6 +24,7 @@ class _AvailabilityVerifyScreenState extends State<AvailabilityVerifyScreen>
     with TickerProviderStateMixin {
   late final AnimationController _pulseCtrl;
   late final AnimationController _orbitCtrl;
+  late final AnimationController _rippleCtrl;
   Timer? _phase1Timer;
   Timer? _phase2Timer;
   Timer? _navigateTimer;
@@ -35,12 +36,17 @@ class _AvailabilityVerifyScreenState extends State<AvailabilityVerifyScreen>
     super.initState();
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
     _orbitCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
+    )..repeat();
+
+    _rippleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
     )..repeat();
 
     // Phase transitions — 1.5s between each for premium feel
@@ -67,6 +73,7 @@ class _AvailabilityVerifyScreenState extends State<AvailabilityVerifyScreen>
     _phase2Timer?.cancel();
     _navigateTimer?.cancel();
     _pulseCtrl.dispose();
+    _rippleCtrl.dispose();
     _orbitCtrl.dispose();
     super.dispose();
   }
@@ -109,31 +116,83 @@ class _AvailabilityVerifyScreenState extends State<AvailabilityVerifyScreen>
                   children: [
             // ---- Orbiting rings + car icon ----
             SizedBox(
-              width: 180,
-              height: 180,
+              width: 260,
+              height: 260,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Outer orbit ring
+                  // ---- Outer blinking ring (clignotage visible) ----
                   AnimatedBuilder(
-                    animation: _orbitCtrl,
+                    animation: _pulseCtrl,
                     builder: (_, __) {
-                      return Transform.rotate(
-                        angle: _orbitCtrl.value * 2 * 3.14159,
-                        child: Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.accent.withValues(alpha: 0.2),
-                              width: 2,
-                            ),
+                      final breathe = 0.25 + (_pulseCtrl.value * 0.55);
+                      return Container(
+                        width: 148,
+                        height: 148,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.accent.withValues(alpha: breathe),
+                            width: 2,
                           ),
                         ),
                       );
                     },
                   ),
+                  // ---- Strong radial glow that pulses ----
+                  AnimatedBuilder(
+                    animation: _pulseCtrl,
+                    builder: (_, __) {
+                      final size = 110 + (_pulseCtrl.value * 38);
+                      final alpha = 0.22 + (_pulseCtrl.value * 0.18);
+                      return Container(
+                        width: size,
+                        height: size,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppColors.accent.withValues(alpha: alpha),
+                              AppColors.accent.withValues(alpha: alpha * 0.4),
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 0.55, 1.0],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  // ---- Ripple rings (subtil) ----
+                  ...List.generate(2, (i) {
+                    return AnimatedBuilder(
+                      animation: _rippleCtrl,
+                      builder: (_, __) {
+                        final t = ((_rippleCtrl.value + i / 2) % 1.0);
+                        final eased = Curves.easeOutCubic.transform(t);
+                        final opacity = ((1 - eased) * 0.45).clamp(0.0, 1.0);
+                        final ringAlpha = (0.35 * (1 - eased)).clamp(0.0, 1.0);
+                        return Opacity(
+                          opacity: opacity,
+                          child: Container(
+                            width: 72 + eased * 48,
+                            height: 72 + eased * 48,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.accent.withValues(
+                                alpha: 0.10 * (1 - eased),
+                              ),
+                              border: Border.all(
+                                color: AppColors.accent.withValues(
+                                  alpha: ringAlpha,
+                                ),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
                   // Inner glow pulse
                   AnimatedBuilder(
                     animation: _pulseCtrl,

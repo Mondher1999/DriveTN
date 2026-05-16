@@ -63,11 +63,15 @@ class _BluetoothLockScreenState extends State<BluetoothLockScreen>
   @override
   Widget build(BuildContext context) {
     final isDone = _step == _labels.length - 1;
+    final mq = MediaQuery.of(context);
+    final safeBottom = mq.padding.bottom;
+    final isCompact = mq.size.height < 820;
+    final circleSize = isCompact ? 220.0 : 240.0;
     return Scaffold(
       body: SunsetGradient(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.fromLTRB(24, 24, 24, safeBottom + 24),
             child: Column(
               children: [
                 Row(
@@ -99,8 +103,8 @@ class _BluetoothLockScreenState extends State<BluetoothLockScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          width: 240,
-                          height: 240,
+                          width: circleSize,
+                          height: circleSize,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [

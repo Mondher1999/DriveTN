@@ -118,14 +118,37 @@ class PaymentScreen extends StatelessWidget {
                           horizontalPadding, isSmall ? 16 : 24, horizontalPadding, 0),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          // Step label
-                          Text(
-                            '— 03 / PAIEMENT',
-                            style: AppTypography.caps(
-                              size: 11,
-                              letterSpacing: 2.4,
-                              color: AppColors.accent,
-                            ),
+                          // Step label — clearer hierarchy with proximity grouping
+                          Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: AppColors.accent.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '03',
+                                    style: AppTypography.body(
+                                      size: 12,
+                                      weight: FontWeight.w800,
+                                      color: AppColors.accent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Paiement',
+                                style: AppTypography.body(
+                                  size: 13,
+                                  weight: FontWeight.w700,
+                                  color: AppColors.accent,
+                                ),
+                              ),
+                            ],
                           )
                               .animate()
                               .fadeIn(duration: 400.ms)
@@ -175,119 +198,88 @@ class PaymentScreen extends StatelessWidget {
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.surface,
-                                  AppColors.softWarm.withValues(alpha: 0.3),
-                                ],
-                              ),
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
                                 color: AppColors.border,
-                                width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      AppColors.ink.withValues(alpha: 0.04),
-                                  blurRadius: 20,
+                                      AppColors.ink.withValues(alpha: 0.035),
+                                  blurRadius: 24,
                                   offset: const Offset(0, 8),
-                                  spreadRadius: -2,
+                                  spreadRadius: -4,
                                 ),
                               ],
                             ),
                             padding: EdgeInsets.symmetric(
-                                vertical: isSmall ? 20 : 24,
-                                horizontal: isSmall ? 14 : 20),
+                                vertical: isSmall ? 22 : 26,
+                                horizontal: isSmall ? 16 : 24),
                             child: IntrinsicHeight(
                               child: Row(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.center,
                                 children: [
                                   Expanded(
-                                    flex: 28,
+                                    flex: 26,
                                     child: _miniStat(
-                                      label: 'DURÉE',
+                                      label: 'Durée',
                                       child: Text(
                                         '${state.durationDays} jour${state.durationDays > 1 ? 's' : ''}',
-                                        style: AppTypography.serif(
-                                            size: isSmall ? 14 : 16,
-                                            italic: true),
+                                        style: AppTypography.body(
+                                          size: isSmall ? 15 : 16,
+                                          weight: FontWeight.w700,
+                                          color: AppColors.ink,
+                                        ),
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ),
-                                  Flexible(
-                                    flex: 8,
-                                    child: Container(
-                                      width: 1,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Colors.transparent,
-                                            AppColors.border,
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                  const SizedBox(width: 8),
+                                  // Subtle vertical divider
+                                  Container(
+                                    width: 1,
+                                    height: 36,
+                                    color: AppColors.border,
                                   ),
+                                  const SizedBox(width: 8),
                                   Expanded(
-                                    flex: 44,
+                                    flex: 48,
                                     child: _miniStat(
-                                      label: 'DATES',
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '${_short(state.startDate)} → ${_short(state.endDate)}',
-                                          style: AppTypography.body(
-                                            size: isSmall ? 12 : 13,
-                                            color: AppColors.ink,
-                                          ),
-                                          textAlign: TextAlign.center,
+                                      label: 'Dates',
+                                      child: Text(
+                                        '${_short(state.startDate)} → ${_short(state.endDate)}',
+                                        style: AppTypography.body(
+                                          size: isSmall ? 13 : 14,
+                                          weight: FontWeight.w600,
+                                          color: AppColors.ink,
                                         ),
+                                        textAlign: TextAlign.center,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ),
-                                  Flexible(
-                                    flex: 8,
-                                    child: Container(
-                                      width: 1,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Colors.transparent,
-                                            AppColors.border,
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
-                                    ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 1,
+                                    height: 36,
+                                    color: AppColors.border,
                                   ),
+                                  const SizedBox(width: 8),
                                   Expanded(
-                                    flex: 28,
+                                    flex: 26,
                                     child: _miniStat(
-                                      label: 'TOTAL',
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '${state.discountedTotal.toStringAsFixed(0)} DT',
-                                          style: AppTypography.numeric(
-                                            size: isSmall ? 18 : 20,
-                                            weight: FontWeight.w900,
-                                            color: AppColors.accent,
-                                            letterSpacing: -0.5,
-                                          ),
-                                          textAlign: TextAlign.center,
+                                      label: 'Total',
+                                      child: Text(
+                                        '${state.discountedTotal.toStringAsFixed(0)} DT',
+                                        style: AppTypography.numeric(
+                                          size: isSmall ? 18 : 20,
+                                          weight: FontWeight.w900,
+                                          color: AppColors.accent,
+                                          letterSpacing: -0.5,
                                         ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ),
@@ -298,7 +290,7 @@ class PaymentScreen extends StatelessWidget {
                               .animate()
                               .fadeIn(duration: 500.ms, delay: 200.ms)
                               .slideY(
-                                  begin: 0.2,
+                                  begin: 0.15,
                                   end: 0,
                                   delay: 200.ms,
                                   duration: 500.ms)
@@ -327,7 +319,7 @@ class PaymentScreen extends StatelessWidget {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(LucideIcons.coins,
+                                  const Icon(LucideIcons.coins,
                                       size: 18, color: AppColors.accent),
                                   const SizedBox(width: 10),
                                   Expanded(
@@ -369,14 +361,24 @@ class PaymentScreen extends StatelessWidget {
 
                           SizedBox(height: isSmall ? 24 : 32),
 
-                          // Method label
-                          Text(
-                            '— MÉTHODE',
-                            style: AppTypography.caps(
-                              size: 11,
-                              letterSpacing: 2.4,
-                              color: AppColors.textMuted,
-                            ),
+                          // Method label — icon + text for instant recognition
+                          Row(
+                            children: [
+                              const Icon(
+                                LucideIcons.creditCard,
+                                size: 14,
+                                color: AppColors.textMuted,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Méthode de paiement',
+                                style: AppTypography.body(
+                                  size: 13,
+                                  weight: FontWeight.w600,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
                           )
                               .animate()
                               .fadeIn(duration: 400.ms, delay: 350.ms)
@@ -389,6 +391,7 @@ class PaymentScreen extends StatelessWidget {
                           SizedBox(height: isSmall ? 10 : 12),
 
                           // ===== Payment method card =====
+                          // Softer dark surface that still pops but doesn't shock the eye
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
@@ -396,29 +399,30 @@ class PaymentScreen extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF1A1A2E),
-                                  Color(0xFF16213E),
+                                  Color(0xFF23283A),
+                                  Color(0xFF1A1F2E),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      AppColors.ink.withValues(alpha: 0.15),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 12),
+                                      AppColors.ink.withValues(alpha: 0.10),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 10),
                                 ),
                               ],
                             ),
-                            padding: EdgeInsets.all(isSmall ? 16 : 20),
+                            padding: EdgeInsets.all(isSmall ? 18 : 22),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Header: provider + selected badge
                                 Row(
                                   children: [
                                     Container(
-                                      width: 48,
-                                      height: 48,
+                                      width: 44,
+                                      height: 44,
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
                                           colors: [
@@ -427,43 +431,43 @@ class PaymentScreen extends StatelessWidget {
                                           ],
                                         ),
                                         borderRadius:
-                                            BorderRadius.circular(14),
+                                            BorderRadius.circular(12),
                                       ),
                                       child: const Icon(
                                         LucideIcons.creditCard,
-                                        color: AppColors.surface,
-                                        size: 22,
+                                        color: Colors.white,
+                                        size: 20,
                                       ),
                                     ),
-                                    const SizedBox(width: 14),
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'CLICTOPAY',
-                                            style: AppTypography.caps(
-                                              size: 10,
-                                              letterSpacing: 2,
+                                            'Clictopay',
+                                            style: AppTypography.body(
+                                              size: 11,
+                                              weight: FontWeight.w600,
                                               color: AppColors.textMuted,
                                             ),
                                           ),
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 2),
                                           Text(
                                             'Carte bancaire',
                                             style: AppTypography.body(
-                                              size: 15,
+                                              size: 16,
                                               weight: FontWeight.w700,
-                                              color: AppColors.surface,
+                                              color: Colors.white,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     Container(
-                                      width: 28,
-                                      height: 28,
+                                      width: 24,
+                                      height: 24,
                                       decoration: const BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
@@ -475,25 +479,25 @@ class PaymentScreen extends StatelessWidget {
                                       ),
                                       child: const Icon(
                                         LucideIcons.check,
-                                        color: AppColors.surface,
-                                        size: 14,
+                                        color: Colors.white,
+                                        size: 12,
                                       ),
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: isSmall ? 16 : 20),
-                                // Card number with glass effect
+                                SizedBox(height: isSmall ? 18 : 22),
+                                // Card number — grouped for readability (Gestalt proximity)
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 14),
                                   decoration: BoxDecoration(
                                     color: Colors.white
-                                        .withValues(alpha: 0.06),
+                                        .withValues(alpha: 0.05),
                                     borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
                                       color: Colors.white
-                                          .withValues(alpha: 0.1),
+                                          .withValues(alpha: 0.08),
                                     ),
                                   ),
                                   child: Row(
@@ -501,33 +505,29 @@ class PaymentScreen extends StatelessWidget {
                                       const Icon(
                                         LucideIcons.nfc,
                                         size: 20,
-                                        color: AppColors.surface,
+                                        color: Colors.white70,
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            '•••• •••• •••• 4242',
-                                            style: AppTypography.body(
-                                              size: 16,
-                                              weight: FontWeight.w600,
-                                              color: AppColors.surface,
-                                              letterSpacing: 2,
-                                            ),
+                                        child: Text(
+                                          '•••• •••• •••• 4242',
+                                          style: AppTypography.body(
+                                            size: 15,
+                                            weight: FontWeight.w600,
+                                            color: Colors.white,
+                                            letterSpacing: 1.5,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: isSmall ? 10 : 12),
+                                SizedBox(height: isSmall ? 12 : 14),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: _darkField(
-                                        label: 'EXPIRATION',
+                                        label: 'Expiration',
                                         value: '12/29',
                                       ),
                                     ),
@@ -546,7 +546,7 @@ class PaymentScreen extends StatelessWidget {
                               .animate()
                               .fadeIn(duration: 600.ms, delay: 450.ms)
                               .slideY(
-                                  begin: 0.2,
+                                  begin: 0.15,
                                   end: 0,
                                   delay: 450.ms,
                                   duration: 600.ms)
@@ -563,27 +563,19 @@ class PaymentScreen extends StatelessWidget {
                           // ===== Security badge =====
                           Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(isSmall ? 12 : 16),
+                            padding: EdgeInsets.all(isSmall ? 16 : 20),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.softWarm,
-                                  AppColors.softWarm
-                                      .withValues(alpha: 0.3),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(18),
+                              color: AppColors.softWarm,
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color:
-                                    AppColors.accent.withValues(alpha: 0.15),
+                                    AppColors.accent.withValues(alpha: 0.12),
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.accent
-                                      .withValues(alpha: 0.06),
-                                  blurRadius: 16,
+                                      .withValues(alpha: 0.05),
+                                  blurRadius: 20,
                                   offset: const Offset(0, 6),
                                 ),
                               ],
@@ -592,8 +584,8 @@ class PaymentScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 44,
+                                  height: 44,
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [
@@ -605,8 +597,8 @@ class PaymentScreen extends StatelessWidget {
                                   ),
                                   child: const Icon(
                                     LucideIcons.shieldCheck,
-                                    color: AppColors.surface,
-                                    size: 18,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
                                 ),
                                 const SizedBox(width: 14),
@@ -616,11 +608,12 @@ class PaymentScreen extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'CAUTION PRÉ-AUTORISÉE',
-                                        style: AppTypography.caps(
-                                          size: 10,
-                                          letterSpacing: 1.8,
+                                        'Caution pré-autorisée',
+                                        style: AppTypography.body(
+                                          size: 12,
+                                          weight: FontWeight.w700,
                                           color: AppColors.accent,
+                                          letterSpacing: 0.2,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -640,7 +633,7 @@ class PaymentScreen extends StatelessWidget {
                               .animate()
                               .fadeIn(duration: 500.ms, delay: 650.ms)
                               .slideY(
-                                  begin: 0.15,
+                                  begin: 0.1,
                                   end: 0,
                                   delay: 650.ms,
                                   duration: 500.ms),
@@ -702,20 +695,21 @@ class PaymentScreen extends StatelessWidget {
 
   Widget _miniStat({required String label, required Widget child}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
-            style: AppTypography.caps(
+            style: AppTypography.body(
               size: 10,
-              letterSpacing: 2,
+              weight: FontWeight.w600,
               color: AppColors.textMuted,
+              letterSpacing: 0.3,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           DefaultTextStyle.merge(
             textAlign: TextAlign.center,
             child: child,
@@ -731,10 +725,11 @@ class PaymentScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTypography.caps(
-            size: 9,
-            letterSpacing: 1.6,
+          style: AppTypography.body(
+            size: 10,
+            weight: FontWeight.w600,
             color: AppColors.textMuted,
+            letterSpacing: 0.3,
           ),
         ),
         const SizedBox(height: 6),
@@ -743,10 +738,10 @@ class PaymentScreen extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: Colors.white.withValues(alpha: 0.08),
             ),
           ),
           child: Text(
@@ -754,8 +749,8 @@ class PaymentScreen extends StatelessWidget {
             style: AppTypography.body(
               size: 14,
               weight: FontWeight.w600,
-              color: AppColors.surface,
-              letterSpacing: 1.4,
+              color: Colors.white,
+              letterSpacing: 1.2,
             ),
           ),
         ),

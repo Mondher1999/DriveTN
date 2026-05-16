@@ -10,6 +10,7 @@ import '../../../data/mock_data.dart';
 import '../../../data/models/booking.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
+import '../../booking/view/pre_rental_unlock_modal.dart';
 
 class MyRentalsScreen extends StatefulWidget {
   const MyRentalsScreen({super.key});
@@ -19,6 +20,38 @@ class MyRentalsScreen extends StatefulWidget {
 }
 
 class _MyRentalsScreenState extends State<MyRentalsScreen> {
+  bool _modalShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showPreRentalModalIfNeeded();
+    });
+  }
+
+  void _showPreRentalModalIfNeeded() {
+    if (_modalShown) return;
+    final now = DateTime.now();
+    final upcoming = MockData.bookings.where(
+      (b) =>
+          b.status == BookingStatus.confirmed &&
+          b.startDate.isAfter(now) &&
+          b.startDate.difference(now).inMinutes <= 15,
+    );
+    if (upcoming.isNotEmpty && mounted) {
+      _modalShown = true;
+      PreRentalUnlockModal.show(context);
+    }
+  }
+
+  bool _isWithin15Min(Booking booking) {
+    final now = DateTime.now();
+    return booking.status == BookingStatus.confirmed &&
+        booking.startDate.isAfter(now) &&
+        booking.startDate.difference(now).inMinutes <= 15;
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -273,13 +306,16 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
     final car = MockData.carById(booking.carId);
     final df = DateFormat('d MMM', 'fr_FR');
     final dates = 'Du ${df.format(booking.startDate)} au ${df.format(booking.endDate)}';
+    final showUnlock = _isWithin15Min(booking);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: _PressableCard(
         onTap: () {
           HapticFeedback.lightImpact();
-          if (booking.status == BookingStatus.inProgress) {
+          if (showUnlock) {
+            PreRentalUnlockModal.show(context);
+          } else if (booking.status == BookingStatus.inProgress) {
             context.push('/rental/${booking.id}');
           } else {
             context.push('/booking-detail/${booking.id}');
@@ -290,59 +326,113 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(
+              color: showUnlock ? AppColors.gradientStart.withValues(alpha: 0.40) : AppColors.border,
+              width: showUnlock ? 1.5 : 1,
+            ),
+            boxShadow: showUnlock
+                ? [
+                    BoxShadow(
+                      color: AppColors.gradientStart.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: car != null && car.photoUrls.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: car.photoUrls.first,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => Container(
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: car != null && car.photoUrls.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: car.photoUrls.first,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => Container(
+                                  color: AppColors.border,
+                                  child: const Icon(LucideIcons.car)),
+                            )
+                          : Container(
                               color: AppColors.border,
                               child: const Icon(LucideIcons.car)),
-                        )
-                      : Container(
-                          color: AppColors.border,
-                          child: const Icon(LucideIcons.car)),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      car?.displayName ?? 'Véhicule',
-                      style: AppTypography.h2(size: 15, weight: FontWeight.w800),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      car?.plate ?? '',
-                      style: AppTypography.caps(
-                        size: 10,
-                        letterSpacing: 1.4,
-                        color: AppColors.textMuted,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          car?.displayName ?? 'Véhicule',
+                          style: AppTypography.h2(size: 15, weight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          car?.plate ?? '',
+                          style: AppTypography.caps(
+                            size: 10,
+                            letterSpacing: 1.4,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          dates,
+                          style: AppTypography.body(
+                              size: 12, color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 8),
+                        _statusBadge(booking.status, showUnlock),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    showUnlock ? LucideIcons.unlock : LucideIcons.chevronRight,
+                    size: 18,
+                    color: showUnlock ? AppColors.gradientStart : AppColors.textMuted,
+                  ),
+                ],
+              ),
+              if (showUnlock) ...[
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    PreRentalUnlockModal.show(context);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.gradientStart, AppColors.gradientEnd],
                       ),
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      dates,
-                      style: AppTypography.body(
-                          size: 12, color: AppColors.textSecondary),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(LucideIcons.unlock, color: Colors.white, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          'Déverrouiller ma voiture',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    _statusBadge(booking.status),
-                  ],
+                  ),
                 ),
-              ),
-              const Icon(LucideIcons.chevronRight,
-                  size: 18, color: AppColors.textMuted),
+              ],
             ],
           ),
         ),
@@ -353,32 +443,38 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
         .slideY(begin: 0.1, end: 0);
   }
 
-  Widget _statusBadge(BookingStatus status) {
+  Widget _statusBadge(BookingStatus status, bool readyToUnlock) {
     String label;
     Color color;
     bool pulse = false;
-    switch (status) {
-      case BookingStatus.pending:
-        label = 'En attente';
-        color = AppColors.warning;
-        break;
-      case BookingStatus.confirmed:
-        label = 'Confirmée';
-        color = AppColors.accent;
-        break;
-      case BookingStatus.inProgress:
-        label = 'En cours';
-        color = AppColors.success;
-        pulse = true;
-        break;
-      case BookingStatus.completed:
-        label = 'Terminée';
-        color = AppColors.textMuted;
-        break;
-      case BookingStatus.cancelled:
-        label = 'Annulée';
-        color = AppColors.danger;
-        break;
+    if (readyToUnlock) {
+      label = 'Prête — 15 min';
+      color = AppColors.gradientStart;
+      pulse = true;
+    } else {
+      switch (status) {
+        case BookingStatus.pending:
+          label = 'En attente';
+          color = AppColors.warning;
+          break;
+        case BookingStatus.confirmed:
+          label = 'Confirmée';
+          color = AppColors.accent;
+          break;
+        case BookingStatus.inProgress:
+          label = 'En cours';
+          color = AppColors.success;
+          pulse = true;
+          break;
+        case BookingStatus.completed:
+          label = 'Terminée';
+          color = AppColors.textMuted;
+          break;
+        case BookingStatus.cancelled:
+          label = 'Annulée';
+          color = AppColors.danger;
+          break;
+      }
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
