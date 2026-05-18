@@ -22,6 +22,7 @@ import '../features/inspection/view/video_360_screen.dart';
 import '../features/messages/view/conversation_screen.dart';
 import '../features/messages/view/messages_screen.dart';
 import '../features/my_rentals/view/my_rentals_screen.dart';
+import '../features/my_rentals/view/simulation_map_screen.dart';
 import '../features/profile/view/profile_screen.dart';
 import '../features/rental/view/active_rental_screen.dart';
 import '../features/rental_detail/view/rental_detail_screen.dart';
@@ -248,6 +249,14 @@ class AppRouter {
           key: s.pageKey,
           state: s,
           child: const GameLeaderboardScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/simulation/map/:carId',
+        pageBuilder: (_, s) => _slideFadePage(
+          key: s.pageKey,
+          state: s,
+          child: SimulationMapScreen(carId: s.pathParameters['carId']!),
         ),
       ),
       GoRoute(

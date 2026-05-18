@@ -16,6 +16,7 @@ class PrimaryButton extends StatelessWidget {
   final ButtonVariant variant;
   final Color? color;
   final IconPosition iconPosition;
+  final double height;
 
   const PrimaryButton({
     super.key,
@@ -26,6 +27,7 @@ class PrimaryButton extends StatelessWidget {
     this.variant = ButtonVariant.ink,
     this.color,
     this.iconPosition = IconPosition.right,
+    this.height = 56,
   });
 
   @override
@@ -71,7 +73,7 @@ class PrimaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: height,
       child: AnimatedOpacity(
         opacity: disabled ? 0.55 : 1,
         duration: const Duration(milliseconds: 200),

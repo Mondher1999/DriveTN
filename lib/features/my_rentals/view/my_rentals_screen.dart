@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +13,7 @@ import '../../../data/models/booking.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../../booking/view/pre_rental_unlock_modal.dart';
+import 'simulation_ready_modal.dart';
 
 class MyRentalsScreen extends StatefulWidget {
   const MyRentalsScreen({super.key});
@@ -21,13 +24,27 @@ class MyRentalsScreen extends StatefulWidget {
 
 class _MyRentalsScreenState extends State<MyRentalsScreen> {
   bool _modalShown = false;
+  bool _showGuideArrow = false;
+  Timer? _guideArrowTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showPreRentalModalIfNeeded();
+      _checkGuideCompletion();
     });
+  }
+
+  void _checkGuideCompletion() {
+    final queryParams = GoRouterState.of(context).uri.queryParameters;
+    if (queryParams['guide'] == 'complete') {
+      setState(() => _showGuideArrow = true);
+      _guideArrowTimer?.cancel();
+      _guideArrowTimer = Timer(const Duration(seconds: 10), () {
+        if (mounted) setState(() => _showGuideArrow = false);
+      });
+    }
   }
 
   void _showPreRentalModalIfNeeded() {
@@ -35,14 +52,26 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
     final now = DateTime.now();
     final upcoming = MockData.bookings.where(
       (b) =>
+          b.id != 'demo-jour-j' &&
           b.status == BookingStatus.confirmed &&
           b.startDate.isAfter(now) &&
           b.startDate.difference(now).inMinutes <= 15,
     );
     if (upcoming.isNotEmpty && mounted) {
       _modalShown = true;
-      PreRentalUnlockModal.show(context);
+      PreRentalUnlockModal.show(context, bookingId: upcoming.first.id);
     }
+  }
+
+  @override
+  void dispose() {
+    _guideArrowTimer?.cancel();
+    super.dispose();
+  }
+
+  void _toggleSimulation() {
+    HapticFeedback.lightImpact();
+    SimulationReadyModal.show(context);
   }
 
   bool _isWithin15Min(Booking booking) {
@@ -55,20 +84,25 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final upcoming = MockData.bookings
-        .where((b) => b.status == BookingStatus.confirmed && b.startDate.isAfter(now))
+    final allBookings = MockData.bookings;
+
+    final upcoming = allBookings
+        .where((b) =>
+            b.status == BookingStatus.confirmed &&
+            b.startDate.isAfter(now) &&
+            b.startDate.difference(now).inMinutes > 15)
         .toList();
     final inProgress =
-        MockData.bookings.where((b) => b.status == BookingStatus.inProgress).toList();
-    final past = MockData.bookings
+        allBookings.where((b) => b.status == BookingStatus.inProgress).toList();
+    final past = allBookings
         .where((b) => b.status == BookingStatus.completed || b.status == BookingStatus.cancelled)
         .toList();
 
-    final totalCount = MockData.bookings.length;
+    final totalCount = allBookings.length;
     final completedCount =
-        MockData.bookings.where((b) => b.status == BookingStatus.completed).length;
+        allBookings.where((b) => b.status == BookingStatus.completed).length;
     final upcomingCount =
-        MockData.bookings.where((b) => b.status == BookingStatus.confirmed).length;
+        allBookings.where((b) => b.status == BookingStatus.confirmed).length;
 
     return DefaultTabController(
       length: 3,
@@ -115,8 +149,80 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
                             color: AppColors.ink,
                           ),
                         ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: _toggleSimulation,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.softWarm,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: AppColors.borderStrong),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(LucideIcons.flaskConical,
+                                    size: 14, color: AppColors.gradientStart),
+                                const SizedBox(width: 6),
+                          Text(
+                            'Tester mon retrait',
+                            style: AppTypography.caps(
+                              size: 10,
+                              letterSpacing: 0.5,
+                              color: AppColors.gradientStart,
+                              weight: FontWeight.w800,
+                            ),
+                          ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
+                    if (_showGuideArrow) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              LucideIcons.arrowUp,
+                              size: 24,
+                              color: AppColors.gradientStart,
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.gradientStart,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.gradientStart.withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                'Testez votre retrait',
+                                style: AppTypography.caps(
+                                  size: 12,
+                                  letterSpacing: 0.5,
+                                  color: AppColors.surface,
+                                  weight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .fadeOut(duration: 700.ms, curve: Curves.easeInOut),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(
                       "Tout l'historique de vos trajets.",
@@ -146,8 +252,6 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
                   ],
                 ),
               ).animate().fadeIn(delay: 100.ms, duration: 420.ms).slideY(begin: 0.06, end: 0),
-
-              const SizedBox(height: 16),
 
               // TabBar pill
               Padding(
@@ -309,12 +413,13 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
     final showUnlock = _isWithin15Min(booking);
 
     return Padding(
+      key: ValueKey(booking.id),
       padding: const EdgeInsets.only(bottom: 12),
       child: _PressableCard(
         onTap: () {
           HapticFeedback.lightImpact();
           if (showUnlock) {
-            PreRentalUnlockModal.show(context);
+            PreRentalUnlockModal.show(context, bookingId: booking.id);
           } else if (booking.status == BookingStatus.inProgress) {
             context.push('/rental/${booking.id}');
           } else {
@@ -404,7 +509,7 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.mediumImpact();
-                    PreRentalUnlockModal.show(context);
+                    PreRentalUnlockModal.show(context, bookingId: booking.id);
                   },
                   child: Container(
                     width: double.infinity,
@@ -458,8 +563,8 @@ class _MyRentalsScreenState extends State<MyRentalsScreen> {
           color = AppColors.warning;
           break;
         case BookingStatus.confirmed:
-          label = 'Confirmée';
-          color = AppColors.accent;
+          label = 'Préparation du retrait';
+          color = AppColors.warning;
           break;
         case BookingStatus.inProgress:
           label = 'En cours';

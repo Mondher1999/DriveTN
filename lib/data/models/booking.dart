@@ -37,6 +37,31 @@ class Booking extends Equatable {
 
   int get durationDays => endDate.difference(startDate).inDays.clamp(1, 365);
 
+  /// Whether the car is ready for pickup (within 15 min of startDate or later).
+  bool isCarReady(DateTime now) {
+    if (status.index >= BookingStatus.inProgress.index) return true;
+    if (status != BookingStatus.confirmed) return false;
+    final diff = startDate.difference(now);
+    return diff.inMinutes <= 15;
+  }
+
+  /// Returns the index of the current active timeline step.
+  /// Steps: 0=Réservation, 1=Confirmée, 2=En préparation, 3=Voiture prête,
+  /// 4=Course en cours, 5=Course terminée.
+  int timelineReachedStep(DateTime now) {
+    switch (status) {
+      case BookingStatus.pending:
+      case BookingStatus.cancelled:
+        return 0;
+      case BookingStatus.confirmed:
+        return isCarReady(now) ? 3 : 2;
+      case BookingStatus.inProgress:
+        return 4;
+      case BookingStatus.completed:
+        return 5;
+    }
+  }
+
   Booking copyWith({
     String? id,
     String? carId,

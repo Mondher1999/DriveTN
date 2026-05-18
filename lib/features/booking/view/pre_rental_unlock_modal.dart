@@ -1,26 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../data/mock_data.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 
 class PreRentalUnlockModal extends StatelessWidget {
-  const PreRentalUnlockModal({super.key});
+  final String? bookingId;
+  final bool isDemo;
+  const PreRentalUnlockModal({super.key, this.bookingId, this.isDemo = false});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context, {String? bookingId, bool isDemo = false}) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const PreRentalUnlockModal(),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      builder: (context) => PreRentalUnlockModal(bookingId: bookingId, isDemo: isDemo),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height * 0.7;
+    final booking = isDemo ? null : MockData.bookingById(bookingId ?? '');
+    final car = booking != null
+        ? MockData.carById(booking.carId)
+        : MockData.carById('c2'); // Peugeot 208 par défaut en démo
 
     return Container(
       height: height,
@@ -66,13 +75,13 @@ class PreRentalUnlockModal extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               // Hero section
-              _buildHeroSection(),
+              _buildHeroSection(car),
               const SizedBox(height: 24),
               // Rental info card
-              _buildInfoCard(),
+              _buildInfoCard(booking, car),
               const Spacer(),
               // CTA button
-              _buildCtaButton(context),
+              _buildCtaButton(context, booking),
               const SizedBox(height: 12),
               // Secondary link
               _buildSecondaryLink(),
@@ -84,7 +93,8 @@ class PreRentalUnlockModal extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroSection() {
+  Widget _buildHeroSection(dynamic car) {
+    final carName = car != null ? '${car.brand} ${car.model}' : 'votre véhicule';
     return Column(
       children: [
         // Big animated car icon in a gradient circle
@@ -112,7 +122,7 @@ class PreRentalUnlockModal extends StatelessWidget {
             ),
         const SizedBox(height: 16),
         Text(
-          'Votre Peugeot 208 est prête',
+          'Votre $carName est prête',
           style: AppTypography.display(size: 22, weight: FontWeight.w800),
           textAlign: TextAlign.center,
         )
@@ -122,7 +132,7 @@ class PreRentalUnlockModal extends StatelessWidget {
               begin: 0.2,
               end: 0,
               duration: 400.ms,
-              delay: -400.ms,
+              delay: 200.ms,
               curve: Curves.easeOut,
             ),
         const SizedBox(height: 8),
@@ -137,14 +147,22 @@ class PreRentalUnlockModal extends StatelessWidget {
               begin: 0.2,
               end: 0,
               duration: 400.ms,
-              delay: -400.ms,
+              delay: 400.ms,
               curve: Curves.easeOut,
             ),
       ],
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(dynamic booking, dynamic car) {
+    final df = DateFormat('d MMM', 'fr_FR');
+    final now = DateTime.now();
+    final startDate = booking?.startDate as DateTime? ?? now.add(const Duration(minutes: 8));
+    final endDate = booking?.endDate as DateTime? ?? now.add(const Duration(days: 2));
+    final dates = '${df.format(startDate)} → ${df.format(endDate)}';
+    final agency = car != null ? MockData.agencyById(car.agencyId) : null;
+    final agencyName = agency?.name ?? 'Agence partenaire';
+    final timeStr = 'Récupération : ${DateFormat('HH:mm', 'fr_FR').format(startDate)}';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
@@ -161,15 +179,15 @@ class PreRentalUnlockModal extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildInfoRow(LucideIcons.calendar, '21 mai → 24 mai'),
+          _buildInfoRow(LucideIcons.calendar, dates),
           const SizedBox(height: 10),
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 10),
-          _buildInfoRow(LucideIcons.mapPin, 'Agence centre-ville'),
+          _buildInfoRow(LucideIcons.mapPin, agencyName),
           const SizedBox(height: 10),
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 10),
-          _buildInfoRow(LucideIcons.clock, 'Récupération : 09:00'),
+          _buildInfoRow(LucideIcons.clock, timeStr),
         ],
       ),
     )
@@ -179,7 +197,7 @@ class PreRentalUnlockModal extends StatelessWidget {
           begin: const Offset(0.95, 0.95),
           end: const Offset(1, 1),
           duration: 500.ms,
-          delay: -500.ms,
+          delay: 600.ms,
           curve: Curves.easeOut,
         );
   }
@@ -197,12 +215,17 @@ class PreRentalUnlockModal extends StatelessWidget {
     );
   }
 
-  Widget _buildCtaButton(BuildContext context) {
+  Widget _buildCtaButton(BuildContext context, dynamic booking) {
     return GestureDetector(
       onTap: () {
         final router = GoRouter.of(context);
         Navigator.of(context).pop();
-        router.go('/inspection/pickup/demo-booking');
+        if (isDemo || booking == null) {
+          // En mode démo ou sans booking, aller vers l'écran de démo d'inspection
+          router.go('/inspection/pickup/demo-booking');
+        } else {
+          router.go('/inspection/pickup/${booking.id}');
+        }
       },
       child: Container(
         width: double.infinity,
@@ -252,7 +275,7 @@ class PreRentalUnlockModal extends StatelessWidget {
         )
         .fadeIn(
           duration: 500.ms,
-          delay: -500.ms,
+          delay: 700.ms,
         );
   }
 

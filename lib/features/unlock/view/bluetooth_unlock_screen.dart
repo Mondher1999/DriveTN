@@ -88,14 +88,32 @@ class _BluetoothUnlockScreenState extends State<BluetoothUnlockScreen>
                             .withValues(alpha: 0.7),
                       ),
                     ),
-                    Text(
-                      '${_step + 1} / ${_labels.length}',
-                      style: AppTypography.caps(
-                        size: 10,
-                        letterSpacing: 2,
-                        color: AppColors.surface
-                            .withValues(alpha: 0.7),
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${_step + 1} / ${_labels.length}',
+                          style: AppTypography.caps(
+                            size: 10,
+                            letterSpacing: 2,
+                            color: AppColors.surface
+                                .withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () => context.go('/home/rentals'),
+                          child: Text(
+                            'Quitter',
+                            style: AppTypography.caps(
+                              size: 10,
+                              letterSpacing: 0.5,
+                              color: AppColors.surface.withValues(alpha: 0.85),
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

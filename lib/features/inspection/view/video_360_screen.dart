@@ -144,6 +144,32 @@ class _Video360ScreenState extends State<Video360Screen> {
                 else
                   Container(color: Colors.black),
 
+                // Quit button top-right
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  right: 16,
+                  child: GestureDetector(
+                    onTap: () => context.go('/home/rentals'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.ink.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Quitter',
+                        style: AppTypography.caps(
+                          size: 10,
+                          letterSpacing: 0.5,
+                          color: AppColors.surface.withValues(alpha: 0.9),
+                          weight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
                 // Top pill step indicator (replaces old circular 6-angle indicator)
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 16,

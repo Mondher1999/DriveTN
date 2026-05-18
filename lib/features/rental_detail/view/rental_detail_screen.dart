@@ -29,102 +29,109 @@ class RentalDetailScreen extends StatelessWidget {
     final car = MockData.carById(booking.carId)!;
     final agency = MockData.agencyById(car.agencyId);
     final status = booking.status;
+    final now = DateTime.now();
+    final isReady = booking.isCarReady(now);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              backgroundColor: AppColors.background,
-              elevation: 0,
-              pinned: true,
-              leading: Padding(
-                padding: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Icon(LucideIcons.arrowLeft,
-                        size: 18, color: AppColors.ink),
-                  ),
-                ),
-              ),
-              centerTitle: true,
-              title: Text(
-                '— DÉTAIL DE LA COURSE',
-                style: AppTypography.caps(
-                  size: 11,
-                  letterSpacing: 2.4,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _statusHero(status, booking)
+      body: CustomScrollView(
+        slivers: [
+          _appBar(context),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _statusHero(status, booking, now)
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+                const SizedBox(height: 24),
+                _vehicleCard(car)
+                    .animate()
+                    .fadeIn(delay: 120.ms, duration: 400.ms)
+                    .slideY(begin: 0.06, end: 0),
+                const SizedBox(height: 24),
+                _datesCard(booking)
+                    .animate()
+                    .fadeIn(delay: 160.ms, duration: 400.ms)
+                    .slideY(begin: 0.06, end: 0),
+                const SizedBox(height: 24),
+                _timelineCard(status, booking, now)
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 400.ms)
+                    .slideY(begin: 0.06, end: 0),
+                const SizedBox(height: 24),
+                if (status != BookingStatus.cancelled) ...[
+                  _pickupLocationCard(context, car, status)
                       .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
-                  const SizedBox(height: 16),
-                  _vehicleCard(car, booking)
-                      .animate()
-                      .fadeIn(delay: 100.ms, duration: 400.ms)
-                      .slideY(begin: 0.06, end: 0),
-                  const SizedBox(height: 16),
-                  _datesCard(booking)
-                      .animate()
-                      .fadeIn(delay: 150.ms, duration: 400.ms)
-                      .slideY(begin: 0.06, end: 0),
-                  const SizedBox(height: 16),
-                  _timelineCard(status, booking)
-                      .animate()
-                      .fadeIn(delay: 200.ms, duration: 400.ms)
-                      .slideY(begin: 0.06, end: 0),
-                  if (status != BookingStatus.cancelled) ...[
-                    const SizedBox(height: 16),
-                    _pickupLocationCard(context, car, status)
-                        .animate()
-                        .fadeIn(delay: 250.ms, duration: 400.ms)
-                        .slideY(begin: 0.06, end: 0),
-                  ],
-                  if (agency != null) ...[
-                    const SizedBox(height: 16),
-                    _agencyCard(agency, context)
-                        .animate()
-                        .fadeIn(delay: 300.ms, duration: 400.ms)
-                        .slideY(begin: 0.06, end: 0),
-                  ],
-                  const SizedBox(height: 16),
-                  _depositCard(status, booking)
-                      .animate()
-                      .fadeIn(delay: 350.ms, duration: 400.ms)
-                      .slideY(begin: 0.06, end: 0),
-                  const SizedBox(height: 16),
-                  _totalCard(booking)
-                      .animate()
-                      .fadeIn(delay: 400.ms, duration: 400.ms)
+                      .fadeIn(delay: 240.ms, duration: 400.ms)
                       .slideY(begin: 0.06, end: 0),
                   const SizedBox(height: 24),
-                  _actionsForStatus(context, status, booking)
+                ],
+                if (agency != null) ...[
+                  _agencyCard(agency, context)
                       .animate()
-                      .fadeIn(delay: 450.ms, duration: 400.ms),
-                ]),
-              ),
+                      .fadeIn(delay: 280.ms, duration: 400.ms)
+                      .slideY(begin: 0.06, end: 0),
+                  const SizedBox(height: 24),
+                ],
+                _depositCard(status, booking)
+                    .animate()
+                    .fadeIn(delay: 320.ms, duration: 400.ms)
+                    .slideY(begin: 0.06, end: 0),
+                const SizedBox(height: 24),
+                _totalCard(booking)
+                    .animate()
+                    .fadeIn(delay: 360.ms, duration: 400.ms)
+                    .slideY(begin: 0.06, end: 0),
+                const SizedBox(height: 24),
+              ]),
             ),
-          ],
+          ),
+        ],
+      ),
+      bottomNavigationBar: _bottomBar(context, status, booking, isReady),
+    );
+  }
+
+  // ─────────────────────────── app bar ───────────────────────────
+
+  Widget _appBar(BuildContext context) {
+    return SliverAppBar(
+      backgroundColor: AppColors.background,
+      surfaceTintColor: AppColors.background,
+      elevation: 0,
+      pinned: true,
+      leading: Padding(
+        padding: const EdgeInsets.all(8),
+        child: GestureDetector(
+          onTap: () => context.pop(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(LucideIcons.arrowLeft,
+                size: 18, color: AppColors.ink),
+          ),
+        ),
+      ),
+      centerTitle: true,
+      title: Text(
+        'DÉTAIL DE LA COURSE',
+        style: AppTypography.caps(
+          size: 11,
+          letterSpacing: 2.4,
+          color: AppColors.textMuted,
         ),
       ),
     );
   }
 
-  Widget _statusHero(BookingStatus status, Booking booking) {
+  // ─────────────────────────── hero status ───────────────────────────
+
+  Widget _statusHero(BookingStatus status, Booking booking, DateTime now) {
     late final IconData icon;
     late final String topLabel;
     late final String title;
@@ -135,8 +142,8 @@ class RentalDetailScreen extends StatelessWidget {
     switch (status) {
       case BookingStatus.pending:
         icon = LucideIcons.clock;
-        topLabel = '— EN ATTENTE';
-        title = "Confirmation\nde l'agence";
+        topLabel = 'EN ATTENTE';
+        title = "Confirmation de l'agence";
         subtitle = "L'agence valide votre demande sous 2h.";
         gradientColors = [
           AppColors.warning.withValues(alpha: 0.18),
@@ -145,10 +152,19 @@ class RentalDetailScreen extends StatelessWidget {
         iconBg = AppColors.warning;
         break;
       case BookingStatus.confirmed:
-        final daysUntil = booking.startDate.difference(DateTime.now()).inDays;
+        final diff = booking.startDate.difference(now);
         icon = LucideIcons.check;
-        topLabel = '— CONFIRMÉE';
-        title = "C'est parti dans\n${daysUntil > 0 ? '$daysUntil jour${daysUntil > 1 ? "s" : ""}' : 'quelques heures'}.";
+        topLabel = 'CONFIRMÉE';
+        if (diff.inDays > 1) {
+          title = "C'est parti dans ${diff.inDays} jours.";
+        } else if (diff.inHours > 1) {
+          title =
+              "C'est parti dans ${diff.inHours}h ${diff.inMinutes.remainder(60)}min.";
+        } else if (diff.inMinutes > 0) {
+          title = "C'est parti dans ${diff.inMinutes} min.";
+        } else {
+          title = "C'est parti maintenant !";
+        }
         subtitle = 'Votre voiture vous attend.';
         gradientColors = [
           AppColors.gradientStart,
@@ -158,7 +174,7 @@ class RentalDetailScreen extends StatelessWidget {
         break;
       case BookingStatus.inProgress:
         icon = LucideIcons.car;
-        topLabel = '— EN COURS';
+        topLabel = 'EN COURS';
         title = 'Course active.';
         subtitle = 'Profitez du voyage.';
         gradientColors = [
@@ -169,8 +185,8 @@ class RentalDetailScreen extends StatelessWidget {
         break;
       case BookingStatus.completed:
         icon = LucideIcons.checkCircle2;
-        topLabel = '— TERMINÉE';
-        title = 'Course\ncomplétée.';
+        topLabel = 'TERMINÉE';
+        title = 'Course complétée.';
         subtitle = 'Merci pour votre voyage avec DriveTN.';
         gradientColors = [
           AppColors.success.withValues(alpha: 0.18),
@@ -180,8 +196,8 @@ class RentalDetailScreen extends StatelessWidget {
         break;
       case BookingStatus.cancelled:
         icon = LucideIcons.x;
-        topLabel = '— ANNULÉE';
-        title = 'Course\nannulée.';
+        topLabel = 'ANNULÉE';
+        title = 'Course annulée.';
         subtitle = 'Votre caution a été restituée.';
         gradientColors = [
           AppColors.danger.withValues(alpha: 0.14),
@@ -194,7 +210,7 @@ class RentalDetailScreen extends StatelessWidget {
     final isConfirmed = status == BookingStatus.confirmed;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -208,19 +224,19 @@ class RentalDetailScreen extends StatelessWidget {
         boxShadow: isConfirmed
             ? [
                 BoxShadow(
-                  color: AppColors.accent.withValues(alpha: 0.32),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
+                  color: AppColors.accent.withValues(alpha: 0.24),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ]
             : null,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: isConfirmed
                   ? AppColors.surface
@@ -229,7 +245,7 @@ class RentalDetailScreen extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              size: 22,
+              size: 20,
               color: isConfirmed ? AppColors.accent : iconBg,
             ),
           ),
@@ -237,29 +253,32 @@ class RentalDetailScreen extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   topLabel,
                   style: AppTypography.caps(
-                    size: 10,
-                    letterSpacing: 2.4,
+                    size: 9,
+                    letterSpacing: 2,
                     color: isConfirmed
-                        ? AppColors.surface.withValues(alpha: 0.85)
+                        ? AppColors.surface.withValues(alpha: 0.9)
                         : iconBg,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   title,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.display(
-                    size: 24,
+                    size: 20,
                     weight: FontWeight.w900,
                     color: isConfirmed ? AppColors.surface : AppColors.ink,
-                    letterSpacing: -1,
-                    height: 1.05,
+                    letterSpacing: -0.8,
+                    height: 1.1,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: AppTypography.body(
@@ -277,9 +296,11 @@ class RentalDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _vehicleCard(car, Booking booking) {
+  // ─────────────────────────── vehicle card ───────────────────────────
+
+  Widget _vehicleCard(car) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -290,8 +311,8 @@ class RentalDetailScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: SizedBox(
-              width: 72,
-              height: 72,
+              width: 80,
+              height: 80,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -315,7 +336,7 @@ class RentalDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,20 +345,21 @@ class RentalDetailScreen extends StatelessWidget {
                 Text(
                   car.brand.toUpperCase(),
                   style: AppTypography.caps(
-                    size: 9,
+                    size: 10,
                     letterSpacing: 1.6,
                     color: AppColors.textMuted,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   car.model,
-                  style: AppTypography.h2(size: 18, weight: FontWeight.w800),
+                  style: AppTypography.h2(size: 20, weight: FontWeight.w800),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   car.plate,
                   style: AppTypography.body(
-                    size: 11,
+                    size: 13,
                     color: AppColors.textMuted,
                     weight: FontWeight.w600,
                   ),
@@ -350,39 +372,17 @@ class RentalDetailScreen extends StatelessWidget {
     );
   }
 
+  // ─────────────────────────── dates card ───────────────────────────
+
   Widget _datesCard(Booking booking) {
     final fmt = DateFormat('d MMM yyyy', 'fr_FR');
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
+    final timeFmt = DateFormat('HH:mm', 'fr_FR');
+    return _infoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.softWarm,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(LucideIcons.calendar,
-                    size: 14, color: AppColors.accent),
-              ),
-              const SizedBox(width: 10),
-              Text('PÉRIODE',
-                  style: AppTypography.caps(
-                      size: 9,
-                      letterSpacing: 1.6,
-                      color: AppColors.textMuted)),
-            ],
-          ),
-          const SizedBox(height: 12),
+          _cardHeader(LucideIcons.calendar, 'PÉRIODE'),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -391,18 +391,28 @@ class RentalDetailScreen extends StatelessWidget {
                   children: [
                     Text('DÉBUT',
                         style: AppTypography.caps(
-                            size: 8,
+                            size: 9,
                             letterSpacing: 1.2,
                             color: AppColors.textMuted)),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(fmt.format(booking.startDate),
                         style: AppTypography.body(
-                            size: 13, weight: FontWeight.w800)),
+                            size: 15, weight: FontWeight.w800)),
+                    Text(timeFmt.format(booking.startDate),
+                        style: AppTypography.body(
+                            size: 12, color: AppColors.textMuted)),
                   ],
                 ),
               ),
-              const Icon(LucideIcons.arrowRight,
-                  size: 14, color: AppColors.textMuted),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.softWarm,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(LucideIcons.arrowRight,
+                    size: 14, color: AppColors.accent),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -410,33 +420,36 @@ class RentalDetailScreen extends StatelessWidget {
                   children: [
                     Text('FIN',
                         style: AppTypography.caps(
-                            size: 8,
+                            size: 9,
                             letterSpacing: 1.2,
                             color: AppColors.textMuted)),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(fmt.format(booking.endDate),
                         style: AppTypography.body(
-                            size: 13, weight: FontWeight.w800)),
+                            size: 15, weight: FontWeight.w800)),
+                    Text(timeFmt.format(booking.endDate),
+                        style: AppTypography.body(
+                            size: 12, color: AppColors.textMuted)),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Container(height: 1, color: AppColors.border),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Text('DURÉE TOTALE',
                   style: AppTypography.caps(
-                      size: 9,
+                      size: 10,
                       letterSpacing: 1.6,
                       color: AppColors.textMuted)),
               const Spacer(),
               Text(
                 '${booking.durationDays} jour${booking.durationDays > 1 ? 's' : ''}',
                 style: AppTypography.body(
-                  size: 13,
+                  size: 15,
                   weight: FontWeight.w800,
                   color: AppColors.accent,
                 ),
@@ -448,65 +461,26 @@ class RentalDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _timelineCard(BookingStatus status, Booking booking) {
+  // ─────────────────────────── timeline ───────────────────────────
+
+  Widget _timelineCard(BookingStatus status, Booking booking, DateTime now) {
     final steps = [
       ('Réservation', LucideIcons.fileText),
       ("Confirmée par l'agence", LucideIcons.checkCircle),
+      ('Préparation du retrait', LucideIcons.scanLine),
       ('Voiture prête', LucideIcons.key),
       ('Course en cours', LucideIcons.car),
       ('Course terminée', LucideIcons.flag),
     ];
 
-    int reachedStep;
-    switch (status) {
-      case BookingStatus.pending:
-        reachedStep = 0;
-        break;
-      case BookingStatus.confirmed:
-        reachedStep = 2;
-        break;
-      case BookingStatus.inProgress:
-        reachedStep = 3;
-        break;
-      case BookingStatus.completed:
-        reachedStep = 4;
-        break;
-      case BookingStatus.cancelled:
-        reachedStep = 0;
-        break;
-    }
+    final reachedStep = booking.timelineReachedStep(now);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
+    return _infoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.softWarm,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(LucideIcons.timer,
-                    size: 14, color: AppColors.accent),
-              ),
-              const SizedBox(width: 10),
-              Text('SUIVI DE LA COURSE',
-                  style: AppTypography.caps(
-                      size: 9,
-                      letterSpacing: 1.6,
-                      color: AppColors.textMuted)),
-            ],
-          ),
-          const SizedBox(height: 14),
+          _cardHeader(LucideIcons.timer, 'SUIVI DE LA COURSE'),
+          const SizedBox(height: 16),
           for (int i = 0; i < steps.length; i++)
             _timelineRow(
               icon: steps[i].$2,
@@ -537,8 +511,8 @@ class RentalDetailScreen extends StatelessWidget {
           Column(
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   gradient: isCurrent
                       ? const LinearGradient(
@@ -553,7 +527,7 @@ class RentalDetailScreen extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  size: 12,
+                  size: 13,
                   color: isReached ? AppColors.surface : AppColors.textMuted,
                 ),
               ),
@@ -561,12 +535,16 @@ class RentalDetailScreen extends StatelessWidget {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: isReached ? AppColors.accent : AppColors.border,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isReached ? AppColors.accent : AppColors.border,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(top: 3, bottom: isLast ? 0 : 14),
@@ -576,7 +554,7 @@ class RentalDetailScreen extends StatelessWidget {
                     child: Text(
                       label,
                       style: AppTypography.body(
-                        size: 13,
+                        size: 14,
                         weight: isCurrent ? FontWeight.w800 : FontWeight.w600,
                         color: textColor,
                       ),
@@ -585,16 +563,16 @@ class RentalDetailScreen extends StatelessWidget {
                   if (isCurrent)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                          horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.14),
+                        color: AppColors.accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         'EN COURS',
                         style: AppTypography.caps(
                           size: 8,
-                          letterSpacing: 1.2,
+                          letterSpacing: 1.4,
                           color: AppColors.accent,
                         ),
                       ),
@@ -607,6 +585,8 @@ class RentalDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  // ─────────────────────────── pickup location ───────────────────────────
 
   Widget _pickupLocationCard(BuildContext context, car, BookingStatus status) {
     return Container(
@@ -621,30 +601,10 @@ class RentalDetailScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.softWarm,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(LucideIcons.mapPin,
-                      size: 14, color: AppColors.accent),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  status == BookingStatus.completed
-                      ? 'POINT DE RETRAIT'
-                      : 'OÙ RETIRER LA VOITURE',
-                  style: AppTypography.caps(
-                      size: 9,
-                      letterSpacing: 1.6,
-                      color: AppColors.textMuted),
-                ),
-              ],
-            ),
+            child: _cardHeader(LucideIcons.mapPin,
+                status == BookingStatus.completed
+                    ? 'POINT DE RETRAIT'
+                    : 'OÙ RETIRER LA VOITURE'),
           ),
           SizedBox(
             height: 160,
@@ -722,7 +682,7 @@ class RentalDetailScreen extends StatelessWidget {
                       Text(
                         'Tunis · ~2.4 km de vous',
                         style: AppTypography.body(
-                            size: 13, weight: FontWeight.w800),
+                            size: 14, weight: FontWeight.w800),
                       ),
                     ],
                   ),
@@ -735,7 +695,7 @@ class RentalDetailScreen extends StatelessWidget {
                       elevation: 0,
                       minimumSize: Size.zero,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                          horizontal: 14, vertical: 10),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     onPressed: () {
@@ -766,27 +726,23 @@ class RentalDetailScreen extends StatelessWidget {
     );
   }
 
+  // ─────────────────────────── agency ───────────────────────────
+
   Widget _agencyCard(agency, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
+    return _infoCard(
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: AppColors.ink,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(LucideIcons.building,
-                color: AppColors.surface, size: 20),
+                color: AppColors.surface, size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,17 +755,17 @@ class RentalDetailScreen extends StatelessWidget {
                         color: AppColors.textMuted)),
                 const SizedBox(height: 2),
                 Text(agency.name,
-                    style: AppTypography.h2(size: 16, weight: FontWeight.w800)),
+                    style: AppTypography.h2(size: 17, weight: FontWeight.w800)),
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     const Icon(Icons.star_rounded,
-                        size: 11, color: AppColors.warning),
+                        size: 12, color: AppColors.warning),
                     const SizedBox(width: 2),
                     Text(
                       '${agency.rating} · ${agency.totalRentals} locations',
                       style: AppTypography.body(
-                          size: 11, color: AppColors.textMuted),
+                          size: 12, color: AppColors.textMuted),
                     ),
                   ],
                 ),
@@ -823,8 +779,8 @@ class RentalDetailScreen extends StatelessWidget {
               );
             },
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColors.gradientStart, AppColors.gradientEnd],
@@ -832,13 +788,15 @@ class RentalDetailScreen extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(LucideIcons.phone,
-                  size: 16, color: AppColors.surface),
+                  size: 18, color: AppColors.surface),
             ),
           ),
         ],
       ),
     );
   }
+
+  // ─────────────────────────── deposit ───────────────────────────
 
   Widget _depositCard(BookingStatus status, Booking booking) {
     String depositLabel;
@@ -880,28 +838,22 @@ class RentalDetailScreen extends StatelessWidget {
         break;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
+    return _infoCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: depositColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(depositIcon, size: 16, color: depositColor),
+                child: Icon(depositIcon, size: 18, color: depositColor),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -916,7 +868,7 @@ class RentalDetailScreen extends StatelessWidget {
                     ),
                     Text(depositLabel,
                         style: AppTypography.body(
-                            size: 13,
+                            size: 14,
                             weight: FontWeight.w800,
                             color: depositColor)),
                   ],
@@ -925,27 +877,29 @@ class RentalDetailScreen extends StatelessWidget {
               Text(
                 '${booking.depositAmount.toInt()} DT',
                 style: AppTypography.numeric(
-                    size: 22,
+                    size: 24,
                     weight: FontWeight.w900,
                     color: depositColor,
-                    letterSpacing: -0.6),
+                    letterSpacing: -0.8),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Container(height: 1, color: AppColors.border),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(depositDetail,
               style:
-                  AppTypography.body(size: 11, color: AppColors.textMuted)),
+                  AppTypography.body(size: 12, color: AppColors.textMuted)),
         ],
       ),
     );
   }
 
+  // ─────────────────────────── total ───────────────────────────
+
   Widget _totalCard(Booking booking) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -973,7 +927,7 @@ class RentalDetailScreen extends StatelessWidget {
               const SizedBox(height: 2),
               Text('Inclus, taxes comprises',
                   style: AppTypography.body(
-                      size: 11, color: AppColors.textMuted)),
+                      size: 12, color: AppColors.textMuted)),
             ],
           ),
           const Spacer(),
@@ -984,10 +938,10 @@ class RentalDetailScreen extends StatelessWidget {
               Text(
                 '${booking.totalPrice.toInt()}',
                 style: AppTypography.numeric(
-                    size: 36,
+                    size: 38,
                     weight: FontWeight.w900,
                     color: AppColors.accent,
-                    letterSpacing: -1.4),
+                    letterSpacing: -1.6),
               ),
               const SizedBox(width: 4),
               Text('DT',
@@ -1000,87 +954,197 @@ class RentalDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _actionsForStatus(
-      BuildContext context, BookingStatus status, Booking booking) {
+  // ─────────────────────────── bottom bar ───────────────────────────
+
+  Widget _bottomBar(
+      BuildContext context, BookingStatus status, Booking booking, bool isReady) {
     switch (status) {
       case BookingStatus.pending:
+        return _bottomActions(
+          context,
+          primary: PrimaryButton(
+            label: "Contacter l'agence",
+            icon: LucideIcons.messageCircle,
+            variant: ButtonVariant.gradient,
+            height: 48,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Messagerie — mode démo')),
+              );
+            },
+          ),
+          secondary: PrimaryButton(
+            label: 'Annuler',
+            icon: LucideIcons.x,
+            variant: ButtonVariant.light,
+            height: 48,
+            onPressed: () => _showCancelDialog(context),
+          ),
+        );
       case BookingStatus.confirmed:
-        return Column(
-          children: [
-            PrimaryButton(
+        if (isReady) {
+          return _bottomActions(
+            context,
+            primary: PrimaryButton(
+              label: 'Déverrouiller ma voiture',
+              icon: LucideIcons.unlock,
+              variant: ButtonVariant.gradient,
+              onPressed: () => context.push('/unlock/${booking.id}'),
+            ),
+            secondary: PrimaryButton(
               label: "Contacter l'agence",
               icon: LucideIcons.messageCircle,
-              variant: ButtonVariant.gradient,
+              variant: ButtonVariant.light,
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Messagerie — mode démo')),
                 );
               },
             ),
-            const SizedBox(height: 10),
-            PrimaryButton(
-              label: 'Annuler la réservation',
-              icon: LucideIcons.x,
-              variant: ButtonVariant.light,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Annuler la réservation ?'),
-                    content: const Text(
-                        "Annulation gratuite jusqu'à 24h avant le départ."),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Non'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Confirmer'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      case BookingStatus.completed:
-        return Column(
-          children: [
-            PrimaryButton(
-              label: 'Télécharger la facture',
-              icon: LucideIcons.download,
-              variant: ButtonVariant.gradient,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Facture — mode démo')),
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            PrimaryButton(
-              label: 'Réserver à nouveau',
-              icon: LucideIcons.refreshCw,
-              variant: ButtonVariant.light,
-              onPressed: () => context.go('/car/${booking.carId}'),
-            ),
-          ],
-        );
-      case BookingStatus.cancelled:
-        return PrimaryButton(
-          label: 'Réserver une autre voiture',
-          icon: LucideIcons.search,
-          variant: ButtonVariant.gradient,
-          onPressed: () => context.go('/home/explorer'),
+          );
+        }
+        return _bottomActions(
+          context,
+          primary: PrimaryButton(
+            label: "Contacter l'agence",
+            icon: LucideIcons.messageCircle,
+            variant: ButtonVariant.gradient,
+            height: 48,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Messagerie — mode démo')),
+              );
+            },
+          ),
+          secondary: PrimaryButton(
+            label: 'Annuler la réservation',
+            icon: LucideIcons.x,
+            variant: ButtonVariant.light,
+            height: 48,
+            onPressed: () => _showCancelDialog(context),
+          ),
         );
       case BookingStatus.inProgress:
-        return PrimaryButton(
-          label: 'Voir le tableau de bord',
-          icon: LucideIcons.gauge,
-          variant: ButtonVariant.gradient,
-          onPressed: () => context.go('/rental/${booking.id}'),
+        return _bottomActions(
+          context,
+          primary: PrimaryButton(
+            label: 'Voir le tableau de bord',
+            icon: LucideIcons.gauge,
+            variant: ButtonVariant.gradient,
+            onPressed: () => context.go('/rental/${booking.id}'),
+          ),
+        );
+      case BookingStatus.completed:
+        return _bottomActions(
+          context,
+          primary: PrimaryButton(
+            label: 'Télécharger la facture',
+            icon: LucideIcons.download,
+            variant: ButtonVariant.gradient,
+            height: 48,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Facture — mode démo')),
+              );
+            },
+          ),
+          secondary: PrimaryButton(
+            label: 'Réserver à nouveau',
+            icon: LucideIcons.refreshCw,
+            variant: ButtonVariant.light,
+            height: 48,
+            onPressed: () => context.go('/car/${booking.carId}'),
+          ),
+        );
+      case BookingStatus.cancelled:
+        return _bottomActions(
+          context,
+          primary: PrimaryButton(
+            label: 'Réserver une autre voiture',
+            icon: LucideIcons.search,
+            variant: ButtonVariant.gradient,
+            onPressed: () => context.go('/home/explorer'),
+          ),
         );
     }
+  }
+
+  Widget _bottomActions(BuildContext context,
+      {required Widget primary, Widget? secondary}) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (secondary != null) ...[
+              secondary,
+              const SizedBox(height: 8),
+            ],
+            primary,
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────── helpers ───────────────────────────
+
+  Widget _infoCard({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: child,
+    );
+  }
+
+  Widget _cardHeader(IconData icon, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: AppColors.softWarm,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 14, color: AppColors.accent),
+        ),
+        const SizedBox(width: 10),
+        Text(label,
+            style: AppTypography.caps(
+                size: 9, letterSpacing: 1.6, color: AppColors.textMuted)),
+      ],
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Annuler la réservation ?'),
+        content: const Text(
+            "Annulation gratuite jusqu'à 24h avant le départ."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Non'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Confirmer'),
+          ),
+        ],
+      ),
+    );
   }
 }

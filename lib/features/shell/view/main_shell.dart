@@ -3,16 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../data/mock_data.dart';
-import '../../../data/models/booking.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
-import '../../booking/view/pre_rental_unlock_modal.dart';
 
 /// Fixed bottom tab bar (Airbnb style).
 /// - Full-width, pinned to the bottom with a top border.
 /// - Opaque surface background (no blur, no float).
-/// - 4 tabs: icon + label.
+/// - 5 tabs: icon + label.
 /// - Coral accent for active; muted grey for inactive.
 class MainShell extends StatefulWidget {
   final Widget child;
@@ -31,33 +28,6 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  bool _autoModalChecked = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showPreRentalModalIfNeeded();
-    });
-  }
-
-  void _showPreRentalModalIfNeeded() {
-    if (_autoModalChecked) return;
-    _autoModalChecked = true;
-
-    final now = DateTime.now();
-    final upcoming = MockData.bookings.where(
-      (b) =>
-          b.status == BookingStatus.confirmed &&
-          b.startDate.isAfter(now) &&
-          b.startDate.difference(now).inMinutes <= 15,
-    );
-
-    if (upcoming.isNotEmpty && mounted) {
-      PreRentalUnlockModal.show(context);
-    }
-  }
-
   int _indexOfLocation(String location) {
     if (location == '/discovery' || location.startsWith('/home/explorer')) return 0;
     for (int i = 0; i < MainShell._tabs.length; i++) {

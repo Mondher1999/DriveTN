@@ -310,15 +310,39 @@ class MockData {
   );
 
   static List<Booking> bookings = [
+    // Confirmed — far in future (shows "En préparation" step)
     Booking(
       id: 'b-up-1',
       carId: 'c5',
       userId: 'user1',
-      startDate: DateTime.now().add(const Duration(days: 5)),
-      endDate: DateTime.now().add(const Duration(days: 8)),
-      totalPrice: 480,
+      startDate: DateTime.now().add(const Duration(days: 8)),
+      endDate: DateTime.now().add(const Duration(days: 12)),
+      totalPrice: 640,
       depositAmount: 900,
       status: BookingStatus.confirmed,
+    ),
+    // Confirmed — medium future (shows "Préparation du retrait" step)
+    Booking(
+      id: 'b-up-2',
+      carId: 'c7',
+      userId: 'user1',
+      startDate: DateTime.now().add(const Duration(days: 12)),
+      endDate: DateTime.now().add(const Duration(days: 15)),
+      totalPrice: 390,
+      depositAmount: 800,
+      status: BookingStatus.confirmed,
+    ),
+    // Demo booking for simulation (Jour J test)
+    Booking(
+      id: 'demo-booking',
+      carId: 'c2',
+      userId: 'user1',
+      startDate: DateTime.now().subtract(const Duration(minutes: 5)),
+      endDate: DateTime.now().add(const Duration(days: 2)),
+      totalPrice: 220,
+      depositAmount: 700,
+      status: BookingStatus.inProgress,
+      isCarUnlocked: true,
     ),
     Booking(
       id: 'b-now-1',

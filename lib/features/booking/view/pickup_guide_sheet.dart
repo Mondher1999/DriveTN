@@ -10,14 +10,15 @@ import '../../../theme/app_typography.dart';
 /// the pickup flow, or when the app opens near rental time.
 /// Optimized for Gestalt clarity: proximity, continuity, similarity, hierarchy.
 class PickupGuideSheet extends StatefulWidget {
-  const PickupGuideSheet({super.key});
+  final VoidCallback? onComplete;
+  const PickupGuideSheet({super.key, this.onComplete});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context, {VoidCallback? onComplete}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const PickupGuideSheet(),
+      builder: (_) => PickupGuideSheet(onComplete: onComplete),
     );
   }
 
@@ -39,6 +40,7 @@ class _PickupGuideSheetState extends State<PickupGuideSheet> {
         curve: Curves.easeInOutCubic,
       );
     } else {
+      widget.onComplete?.call();
       Navigator.of(context).pop();
     }
   }
@@ -340,7 +342,7 @@ class _SlideContent extends StatelessWidget {
     'Une fois devant le véhicule, appuyez sur « Déverrouiller » pour lancer la vérification vidéo.',
     'Filmez l\'extérieur sous plusieurs angles pour valider l\'état du véhicule avant de partir.',
     'Après la vidéo, le véhicule se déverrouille automatiquement. Les clés sont à l\'intérieur.',
-    'Retrouvez votre réservation à tout moment dans l\'application. Nous vous enverrons une notification 15 minutes avant l\'heure de retrait.',
+    'Retrouvez votre réservation à tout moment dans l\'application. Vous pouvez lancer une simulation avant le jour J pour tester le retrait. Nous vous enverrons aussi une notification 15 minutes avant l\'heure de retrait.',
   ];
 
   Widget _mockScreenFor(int idx, double width) {
@@ -1344,17 +1346,90 @@ class _SlideContent extends StatelessWidget {
                       size: 9, letterSpacing: 1.4, color: AppColors.textMuted)),
               const SizedBox(height: 1),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Mes ',
-                      style: AppTypography.display(
-                          size: 16, weight: FontWeight.w800, letterSpacing: -0.4)),
-                  const Text('locations.',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.ink,
-                          letterSpacing: -0.4)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text('Mes ',
+                              style: AppTypography.display(
+                                  size: 16, weight: FontWeight.w800, letterSpacing: -0.4)),
+                          const Text('locations.',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  fontStyle: FontStyle.italic,
+                                  color: AppColors.ink,
+                                  letterSpacing: -0.4)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.softWarm,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: AppColors.borderStrong),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(LucideIcons.flaskConical,
+                                size: 8, color: AppColors.gradientStart),
+                            const SizedBox(width: 2),
+                        Text('Tester mon retrait',
+                            style: AppTypography.caps(
+                                size: 7,
+                                letterSpacing: 0.5,
+                                color: AppColors.gradientStart,
+                                weight: FontWeight.w800)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            LucideIcons.arrowUp,
+                            size: 16,
+                            color: AppColors.gradientStart,
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.gradientStart,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                          'Testez votre retrait',
+                          style: AppTypography.caps(
+                            size: 8,
+                            letterSpacing: 0.5,
+                            color: AppColors.surface,
+                            weight: FontWeight.w800,
+                          ),
+                            ),
+                          ),
+                        ],
+                      )
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .fadeOut(duration: 700.ms, curve: Curves.easeInOut),
+                    ],
+                  )
+                      .animate()
+                      .fadeIn(delay: 600.ms, duration: 500.ms)
+                      .slideY(begin: -0.1, end: 0, duration: 500.ms, delay: 600.ms),
                 ],
               ),
               const SizedBox(height: 0),

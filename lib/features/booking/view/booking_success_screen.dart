@@ -164,20 +164,11 @@ class BookingSuccessScreen extends StatelessWidget {
                     label: 'Voir le guide de prise en charge',
                     icon: LucideIcons.bookOpen,
                     variant: ButtonVariant.gradient,
-                    onPressed: () => PickupGuideSheet.show(context),
-                  ).animate().fadeIn(delay: 1100.ms),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () => context.go('/home/rentals'),
-                  child: Text(
-                    'Plus tard',
-                    style: AppTypography.body(
-                      size: 14,
-                      color: AppColors.textMuted,
-                      weight: FontWeight.w600,
+                    onPressed: () => PickupGuideSheet.show(
+                      context,
+                      onComplete: () => context.go('/home/rentals?guide=complete'),
                     ),
-                  ),
-                ),
+                  ).animate().fadeIn(delay: 1100.ms),
               ],
             ),
           ),

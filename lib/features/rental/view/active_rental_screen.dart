@@ -1,19 +1,25 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../data/mock_data.dart';
-import '../../../shared/widgets/price_tag.dart';
+import '../../../data/models/agency.dart';
+import '../../../data/models/booking.dart';
+import '../../../data/models/car.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../bloc/rental_cubit.dart';
 import '../bloc/rental_state.dart';
 
+/// Course active — redesigned as a "Trip Card".
+/// No telemetry, no live tracking. Just what the driver actually needs.
 class ActiveRentalScreen extends StatefulWidget {
   final String bookingId;
   const ActiveRentalScreen({super.key, required this.bookingId});
@@ -45,102 +51,151 @@ class _ActiveRentalScreenState extends State<ActiveRentalScreen> {
     super.dispose();
   }
 
-  String _fmtDuration(Duration d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(d.inHours)}:${two(d.inMinutes.remainder(60))}:${two(d.inSeconds.remainder(60))}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final booking = MockData.bookingById(widget.bookingId);
-    final deposit = booking?.depositAmount ?? 0;
+    if (booking == null) {
+      return const Scaffold(body: Center(child: Text('Location introuvable')));
+    }
+    final car = MockData.carById(booking.carId);
+    final agency = MockData.agencyById(car?.agencyId ?? '');
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: AppColors.ink),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          '— EN COURS',
-          style: AppTypography.label(
-            size: 11,
-            letterSpacing: 2.4,
-            color: AppColors.textMuted,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: BlocBuilder<RentalCubit, RentalState>(
         builder: (context, state) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            children: [
-              _heroBlock(state),
-              const SizedBox(height: 16),
-              _statsRow(state, deposit),
-              const SizedBox(height: 16),
-              _mapBlock(state),
-              const SizedBox(height: 24),
-              _actionRow(state),
-              const SizedBox(height: 24),
-              PrimaryButton(
-                variant: ButtonVariant.gradient,
-                label: 'Terminer la location',
-                icon: LucideIcons.arrowRight,
-                onPressed: () {
-                  context.read<RentalCubit>().stop();
-                  context.push('/inspection/return/${widget.bookingId}');
-                },
+          return CustomScrollView(
+            slivers: [
+              _appBar(),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _tripIdentityCard(booking, car, agency)
+                        .animate()
+                        .fadeIn(duration: 400.ms)
+                        .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+                    const SizedBox(height: 24),
+                    _timeLeftCard(booking)
+                        .animate()
+                        .fadeIn(delay: 80.ms, duration: 400.ms)
+                        .slideY(begin: 0.06, end: 0),
+                    const SizedBox(height: 24),
+                    _whatsIncludedCard()
+                        .animate()
+                        .fadeIn(delay: 140.ms, duration: 400.ms)
+                        .slideY(begin: 0.06, end: 0),
+                    const SizedBox(height: 24),
+                    _returnLocationCard(agency)
+                        .animate()
+                        .fadeIn(delay: 200.ms, duration: 400.ms)
+                        .slideY(begin: 0.06, end: 0),
+                    const SizedBox(height: 24),
+                    _helpActions(context, state)
+                        .animate()
+                        .fadeIn(delay: 260.ms, duration: 400.ms)
+                        .slideY(begin: 0.06, end: 0),
+                    const SizedBox(height: 24),
+                  ]),
+                ),
               ),
-              const SizedBox(height: 12),
             ],
           );
         },
       ),
+      bottomNavigationBar: _bottomReturnBar(context, booking),
     );
   }
 
-  Widget _heroBlock(RentalState state) {
-    // 200km cap for distance arc; fuel 0–100; both visualized as arcs.
-    final kmProgress = (state.kilometers / 200).clamp(0.0, 1.0);
-    final fuelProgress = (state.fuelPercent / 100).clamp(0.0, 1.0);
+  // ─────────────────────────── app bar ───────────────────────────
+
+  Widget _appBar() {
+    return SliverAppBar(
+      backgroundColor: AppColors.background,
+      surfaceTintColor: AppColors.background,
+      elevation: 0,
+      pinned: true,
+      leading: Padding(
+        padding: const EdgeInsets.all(8),
+        child: GestureDetector(
+          onTap: () => context.pop(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(LucideIcons.arrowLeft,
+                size: 18, color: AppColors.ink),
+          ),
+        ),
+      ),
+      centerTitle: true,
+      title: Text(
+        'VOTRE LOCATION',
+        style: AppTypography.caps(
+          size: 11,
+          letterSpacing: 2.4,
+          color: AppColors.textMuted,
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+          child: GestureDetector(
+            onTap: () => context.go('/home/rentals'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                'Quitter',
+                style: AppTypography.caps(
+                  size: 10,
+                  letterSpacing: 0.5,
+                  color: AppColors.textSecondary,
+                  weight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────── trip identity ───────────────────────────
+
+  Widget _tripIdentityCard(Booking booking, Car? car, Agency? agency) {
+    final fmt = DateFormat('d MMM', 'fr_FR');
+    final timeFmt = DateFormat('HH:mm', 'fr_FR');
 
     return Container(
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withValues(alpha: 0.08),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
+            color: AppColors.borderStrong.withValues(alpha: 0.6),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '— EN COURSE',
-                style: AppTypography.caps(
-                  size: 10,
-                  letterSpacing: 2.4,
-                  color: AppColors.textMuted,
-                ),
-              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.12),
+                  color: AppColors.successSoft,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
@@ -153,11 +208,12 @@ class _ActiveRentalScreenState extends State<ActiveRentalScreen> {
                         color: AppColors.success,
                         shape: BoxShape.circle,
                       ),
-                    ).animate(onPlay: (c) => c.repeat()).fadeOut(
-                        duration: 1200.ms, curve: Curves.easeInOut),
+                    )
+                        .animate(onPlay: (c) => c.repeat())
+                        .fadeOut(duration: 1200.ms, curve: Curves.easeInOut),
                     const SizedBox(width: 6),
                     Text(
-                      'LIVE',
+                      'LOCATION ACTIVE',
                       style: AppTypography.caps(
                         size: 9,
                         letterSpacing: 1.6,
@@ -170,218 +226,115 @@ class _ActiveRentalScreenState extends State<ActiveRentalScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: 240,
-            height: 240,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Distance arc (outer)
-                CustomPaint(
-                  size: const Size(240, 240),
-                  painter: _GaugeArcPainter(
-                    progress: kmProgress,
-                    strokeWidth: 8,
-                    baseColor: AppColors.border,
-                    gradientColors: const [
-                      AppColors.gradientStart,
-                      AppColors.gradientEnd,
-                    ],
-                    startAngle: -3.14159 * 0.75,
-                    sweepAngle: 3.14159 * 1.5,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (car != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: CachedNetworkImage(
+                      imageUrl: car.photoUrls.first,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.softWarm,
+                        child: const Icon(LucideIcons.car,
+                            size: 32, color: AppColors.textMuted),
+                      ),
+                    ),
                   ),
                 ),
-                // Fuel arc (inner)
-                CustomPaint(
-                  size: const Size(192, 192),
-                  painter: _GaugeArcPainter(
-                    progress: fuelProgress,
-                    strokeWidth: 5,
-                    baseColor: AppColors.border,
-                    gradientColors: [
-                      state.fuelPercent < 30
-                          ? AppColors.warning
-                          : AppColors.ink,
-                      state.fuelPercent < 30
-                          ? AppColors.danger
-                          : AppColors.ink,
-                    ],
-                    startAngle: -3.14159 * 0.75,
-                    sweepAngle: 3.14159 * 1.5,
-                  ),
-                ),
-                // Center timer
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(width: 16),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'TEMPS',
-                      style: AppTypography.caps(
-                        size: 9,
-                        letterSpacing: 2.4,
+                      '${car?.brand ?? ''} ${car?.model ?? 'Véhicule'}',
+                      style: AppTypography.display(
+                        size: 22,
+                        weight: FontWeight.w900,
+                        color: AppColors.ink,
+                        letterSpacing: -0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      car?.plate ?? '',
+                      style: AppTypography.body(
+                        size: 13,
                         color: AppColors.textMuted,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
-                      _fmtDuration(state.elapsed),
-                      style: AppTypography.numeric(
-                        size: 38,
-                        weight: FontWeight.w800,
-                        color: AppColors.ink,
-                        italic: false,
-                        letterSpacing: -1,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(width: 28, height: 1, color: AppColors.border),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Profitez du voyage —',
+                      '${fmt.format(booking.startDate)} à ${timeFmt.format(booking.startDate)} — ${fmt.format(booking.endDate)} à ${timeFmt.format(booking.endDate)}',
                       style: AppTypography.body(
-                        size: 11,
-                        italic: true,
+                        size: 12,
                         color: AppColors.textMuted,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Legend
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _gaugeLegend(
-                gradient: true,
-                label: 'KM',
-                value: '${state.kilometers}',
-                cap: '/ 200',
-              ),
-              Container(width: 1, height: 32, color: AppColors.border),
-              _gaugeLegend(
-                gradient: false,
-                color: state.fuelPercent < 30
-                    ? AppColors.warning
-                    : AppColors.ink,
-                label: 'FUEL',
-                value: '${state.fuelPercent}',
-                cap: '%',
               ),
             ],
           ),
+          if (agency != null) ...[
+            const SizedBox(height: 14),
+            Container(height: 1, color: AppColors.border),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(LucideIcons.building,
+                    size: 14, color: AppColors.textMuted),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Avec ${agency.name}',
+                    style: AppTypography.body(
+                      size: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _gaugeLegend({
-    bool gradient = false,
-    Color? color,
-    required String label,
-    required String value,
-    required String cap,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 22,
-          height: 4,
-          decoration: BoxDecoration(
-            color: gradient ? null : color,
-            gradient: gradient
-                ? const LinearGradient(
-                    colors: [AppColors.gradientStart, AppColors.gradientEnd],
-                  )
-                : null,
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: AppTypography.caps(
-            size: 9,
-            letterSpacing: 1.6,
-            color: AppColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              value,
-              style: AppTypography.numeric(
-                size: 22,
-                weight: FontWeight.w800,
-                color: AppColors.ink,
-                italic: false,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Text(
-              cap,
-              style: AppTypography.body(
-                size: 11,
-                weight: FontWeight.w600,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  // ─────────────────────────── time left ───────────────────────────
 
-  Widget _statsRow(RentalState state, double deposit) {
-    final fuelColor =
-        state.fuelPercent < 30 ? AppColors.warning : AppColors.ink;
-    return Row(
-      children: [
-        Expanded(
-          child: _statTile(
-            label: 'KM PARCOURUS',
-            value: '${state.kilometers}',
-            valueColor: AppColors.ink,
-            caption: 'Distance',
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _statTile(
-            label: 'CARBURANT',
-            value: '${state.fuelPercent}%',
-            valueColor: fuelColor,
-            caption: 'Réservoir',
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _statTile(
-            label: 'CAUTION',
-            value: PriceTag.format(deposit),
-            valueColor: AppColors.accent,
-            caption: 'Bloquée',
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _timeLeftCard(Booking booking) {
+    final now = DateTime.now();
+    final remaining = booking.endDate.difference(now);
+    final daysLeft = remaining.inDays;
+    final hoursLeft = remaining.inHours;
+    final isOverdue = remaining.isNegative;
 
-  Widget _statTile({
-    required String label,
-    required String value,
-    required Color valueColor,
-    required String caption,
-  }) {
+    String headline;
+    String sub;
+    if (isOverdue) {
+      headline = 'Retard de ${remaining.abs().inHours}h';
+      sub = 'Contactez l\'agence rapidement';
+    } else if (daysLeft > 1) {
+      headline = '$daysLeft jours restants';
+      sub = 'Retour le ${DateFormat('d MMMM à HH:mm', 'fr_FR').format(booking.endDate)}';
+    } else if (hoursLeft > 1) {
+      headline = '$hoursLeft heures restantes';
+      sub = 'Retour prévu à ${DateFormat('HH:mm', 'fr_FR').format(booking.endDate)}';
+    } else {
+      headline = 'Retour dans ${remaining.inMinutes} min';
+      sub = 'Dirigez-vous vers le point de restitution';
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -390,32 +343,45 @@ class _ActiveRentalScreenState extends State<ActiveRentalScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: AppTypography.label(
-              size: 10,
-              letterSpacing: 1.8,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: AppTypography.numeric(
-                size: 24,
-                italic: true,
-                color: valueColor,
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isOverdue
+                      ? AppColors.danger.withValues(alpha: 0.12)
+                      : AppColors.softWarm,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isOverdue ? LucideIcons.alertTriangle : LucideIcons.hourglass,
+                  size: 14,
+                  color: isOverdue ? AppColors.danger : AppColors.accent,
+                ),
               ),
+              const SizedBox(width: 10),
+              Text(
+                'DURÉE RESTANTE',
+                style: AppTypography.caps(
+                    size: 9, letterSpacing: 1.6, color: AppColors.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            headline,
+            style: AppTypography.h2(
+              size: 20,
+              weight: FontWeight.w900,
+              color: isOverdue ? AppColors.danger : AppColors.ink,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            caption,
+            sub,
             style: AppTypography.body(
-              size: 11,
+              size: 14,
               color: AppColors.textMuted,
             ),
           ),
@@ -424,74 +390,232 @@ class _ActiveRentalScreenState extends State<ActiveRentalScreen> {
     );
   }
 
-  Widget _mapBlock(RentalState state) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: SizedBox(
-        height: 200,
-        child: FlutterMap(
-          options: MapOptions(
-            initialCenter: state.currentPosition,
-            initialZoom: 14,
-          ),
-          children: [
-            TileLayer(
-              urlTemplate:
-                  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              userAgentPackageName: 'com.drivetn.app',
+  // ─────────────────────────── what's included ───────────────────────────
+
+  Widget _whatsIncludedCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardHeader(LucideIcons.shieldCheck, 'INCLUS DANS VOTRE LOCATION'),
+          const SizedBox(height: 14),
+          _includedRow(LucideIcons.shield, 'Assurance tous risques active'),
+          _includedRow(LucideIcons.truck, 'Assistance routière 24/7'),
+          _includedRow(LucideIcons.milestone, '200 km inclus'),
+          _includedRow(LucideIcons.droplets, 'Carburant plein/plein'),
+        ],
+      ),
+    );
+  }
+
+  Widget _includedRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.success),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTypography.body(
+                size: 14,
+                color: AppColors.ink,
+                weight: FontWeight.w600,
+              ),
             ),
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: state.currentPosition,
-                  width: 56,
-                  height: 56,
-                  child: Stack(
-                    alignment: Alignment.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────── return location ───────────────────────────
+
+  Widget _returnLocationCard(Agency? agency) {
+    if (agency == null) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: _cardHeader(LucideIcons.mapPin, 'POINT DE RESTITUTION'),
+          ),
+          SizedBox(
+            height: 140,
+            child: AbsorbPointer(
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: MockData.tunisCenter,
+                  initialZoom: 13,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.none,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c', 'd'],
+                    userAgentPackageName: 'com.drivetn.app',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.18),
-                          shape: BoxShape.circle,
-                        ),
+                      Text(
+                        agency.name,
+                        style: AppTypography.body(
+                            size: 15, weight: FontWeight.w800),
                       ),
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.gradientStart,
-                              AppColors.gradientEnd,
-                            ],
-                          ),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: AppColors.surface, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  AppColors.accent.withValues(alpha: 0.5),
-                              blurRadius: 14,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          LucideIcons.car,
-                          size: 12,
-                          color: AppColors.surface,
-                        ),
+                      const SizedBox(height: 2),
+                      Text(
+                        agency.address,
+                        style: AppTypography.body(
+                            size: 13, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.softWarm,
+                    foregroundColor: AppColors.accent,
+                    elevation: 0,
+                    minimumSize: Size.zero,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Itinéraire — mode démo')),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.navigation, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        'GO',
+                        style: AppTypography.caps(
+                            size: 9,
+                            letterSpacing: 1.2,
+                            color: AppColors.accent),
                       ),
                     ],
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────── help actions ───────────────────────────
+
+  Widget _helpActions(BuildContext context, RentalState state) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _actionChip(
+          icon: state.isLocked ? LucideIcons.lock : LucideIcons.unlock,
+          label: state.isLocked ? 'Verrouillée' : 'Déverrouillée',
+          onTap: () {
+            HapticFeedback.lightImpact();
+            context.read<RentalCubit>().toggleLock();
+          },
+        ),
+        _actionChip(
+          icon: LucideIcons.messageCircle,
+          label: 'Messagerie',
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Messagerie — mode démo')),
+            );
+          },
+        ),
+        _actionChip(
+          icon: LucideIcons.phone,
+          label: 'Assistance',
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                backgroundColor: AppColors.surface,
+                title: Text('Assistance',
+                    style: AppTypography.h2(size: 18)),
+                content: Text(
+                  'Appelez votre agence partenaire',
+                  style: AppTypography.body(size: 14),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _actionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 92,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppColors.ink, size: 22),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: AppTypography.caps(
+                size: 9,
+                letterSpacing: 0.5,
+                color: AppColors.textMuted,
+              ),
             ),
           ],
         ),
@@ -499,152 +623,70 @@ class _ActiveRentalScreenState extends State<ActiveRentalScreen> {
     );
   }
 
-  Widget _actionRow(RentalState state) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _circleAction(
-          icon: state.isLocked ? LucideIcons.lock : LucideIcons.unlock,
-          label: state.isLocked ? 'VERROUILLÉ' : 'OUVERT',
-          onTap: () {
-            HapticFeedback.lightImpact();
-            context.read<RentalCubit>().toggleLock();
-          },
-        ),
-        _circleAction(
-          icon: LucideIcons.lifeBuoy,
-          label: 'SOS',
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.surface,
-                title: Text('SOS', style: AppTypography.serif(size: 18)),
-                content: Text(
-                  'Mode démo · appel fictif',
-                  style: AppTypography.body(size: 14),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        _circleAction(
-          icon: LucideIcons.messageCircle,
-          label: 'MESSAGES',
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.surface,
-                title:
-                    Text('Messages', style: AppTypography.serif(size: 18)),
-                content: Text(
-                  'Mode démo',
-                  style: AppTypography.body(size: 14),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
+  // ─────────────────────────── bottom bar ───────────────────────────
 
-  Widget _circleAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
+  Widget _bottomReturnBar(BuildContext context, Booking booking) {
+    final now = DateTime.now();
+    final isNearReturn = booking.endDate.difference(now).inHours <= 2;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isNearReturn)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  'Votre location se termine bientôt',
+                  style: AppTypography.body(
+                    size: 13,
+                    color: AppColors.textMuted,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            PrimaryButton(
+              label: 'Rendre le véhicule',
+              icon: LucideIcons.arrowRight,
+              variant: ButtonVariant.gradient,
+              height: 48,
+              onPressed: () {
+                context.read<RentalCubit>().stop();
+                context.push('/inspection/return/${widget.bookingId}');
+              },
             ),
-            child: Icon(icon, color: AppColors.ink, size: 22),
-          ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: AppTypography.label(
-            size: 10,
-            letterSpacing: 1.8,
-            color: AppColors.textMuted,
+      ),
+    );
+  }
+
+  // ─────────────────────────── helpers ───────────────────────────
+
+  Widget _cardHeader(IconData icon, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: AppColors.softWarm,
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Icon(icon, size: 14, color: AppColors.accent),
         ),
+        const SizedBox(width: 10),
+        Text(label,
+            style: AppTypography.caps(
+                size: 9, letterSpacing: 1.6, color: AppColors.textMuted)),
       ],
     );
   }
-}
-
-class _GaugeArcPainter extends CustomPainter {
-  final double progress;
-  final double strokeWidth;
-  final Color baseColor;
-  final List<Color> gradientColors;
-  final double startAngle;
-  final double sweepAngle;
-
-  _GaugeArcPainter({
-    required this.progress,
-    required this.strokeWidth,
-    required this.baseColor,
-    required this.gradientColors,
-    required this.startAngle,
-    required this.sweepAngle,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    final base = Paint()
-      ..color = baseColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(rect, startAngle, sweepAngle, false, base);
-
-    if (progress > 0) {
-      final fg = Paint()
-        ..shader = SweepGradient(
-          startAngle: startAngle,
-          endAngle: startAngle + sweepAngle,
-          colors: gradientColors,
-        ).createShader(rect)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(rect, startAngle, sweepAngle * progress, false, fg);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GaugeArcPainter old) =>
-      old.progress != progress ||
-      old.strokeWidth != strokeWidth ||
-      old.gradientColors != gradientColors;
 }
